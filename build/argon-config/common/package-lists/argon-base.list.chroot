@@ -4,6 +4,9 @@
 
 ## Core system
 systemd
+# systemd-resolved is a separate package now; Argon's DNS-over-TLS setup
+# (etc/systemd/resolved.conf.d) depends on it being present and enabled.
+systemd-resolved
 sudo
 apt
 apt-transport-https

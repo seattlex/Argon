@@ -4,16 +4,28 @@ set -e
 
 echo "argon: configuring default services"
 
+# Enable a unit but never abort the build if it is missing: package splits
+# upstream (e.g. systemd-resolved moving out of the systemd package) should
+# be surfaced as a warning, not a hard failure. The packages that provide
+# these units are pinned in the package lists.
+enable_unit() {
+    if systemctl enable "$1" 2>/dev/null; then
+        return 0
+    fi
+    echo "argon: WARNING could not enable $1 (unit not present)" >&2
+}
+
 # --- Enabled by default -------------------------------------------------
-systemctl enable apparmor.service
-systemctl enable ufw.service
-systemctl enable fail2ban.service
+enable_unit apparmor.service
+enable_unit ufw.service
+enable_unit fail2ban.service
 # unattended-upgrades runs off the apt-daily timers (its .service is a
 # shutdown hook with no [Install] section — do not `enable` it directly)
-systemctl enable apt-daily.timer apt-daily-upgrade.timer
-systemctl enable chrony.service 2>/dev/null || systemctl enable chronyd.service
-systemctl enable systemd-resolved.service
-systemctl enable NetworkManager.service
+enable_unit apt-daily.timer
+enable_unit apt-daily-upgrade.timer
+enable_unit chrony.service || enable_unit chronyd.service
+enable_unit systemd-resolved.service
+enable_unit NetworkManager.service
 
 # Activate UFW without needing a running daemon in the chroot:
 # default deny incoming / allow outgoing, IPv6 included.
@@ -52,4 +64,4 @@ systemctl disable systemd-timesyncd.service 2>/dev/null || true
 # regenerates them on first boot of an installed system; live-config does
 # the same for live sessions.
 rm -f /etc/ssh/ssh_host_*_key /etc/ssh/ssh_host_*_key.pub
-systemctl enable argon-firstboot.service
+enable_unit argon-firstboot.service
