@@ -1,0 +1,77 @@
+#!/bin/sh
+# Argon OS — apply distribution identity inside the image.
+set -e
+
+echo "argon: applying branding"
+
+VERSION_STR="$(cat /etc/argon_version 2>/dev/null || echo rolling)"
+
+cat > /etc/os-release <<EOF
+PRETTY_NAME="Argon OS ${VERSION_STR}"
+NAME="Argon OS"
+VERSION_ID="${VERSION_STR}"
+VERSION="${VERSION_STR}"
+VERSION_CODENAME=argon-rolling
+ID=argon
+ID_LIKE="kali debian"
+HOME_URL="https://github.com/seattlex/argon"
+SUPPORT_URL="https://github.com/seattlex/argon/discussions"
+BUG_REPORT_URL="https://github.com/seattlex/argon/issues"
+ANSI_COLOR="0;38;2;94;129;172"
+EOF
+
+# lsb_release reads this on Debian derivatives
+if [ -f /etc/lsb-release ] || [ -d /etc ]; then
+    cat > /etc/lsb-release <<EOF
+DISTRIB_ID=Argon
+DISTRIB_RELEASE=${VERSION_STR}
+DISTRIB_CODENAME=argon-rolling
+DISTRIB_DESCRIPTION="Argon OS ${VERSION_STR}"
+EOF
+fi
+
+printf 'Argon OS %s \\n \\l\n\n' "${VERSION_STR}" > /etc/issue
+printf 'Argon OS %s\n' "${VERSION_STR}" > /etc/issue.net
+
+cat > /etc/motd <<'EOF'
+
+  Argon OS — privacy first, security by default.
+  Docs: https://github.com/seattlex/argon/tree/main/docs
+
+EOF
+
+# Default hostname (also set via kernel cmdline for the live session)
+echo "argon" > /etc/hostname
+
+# Plymouth boot splash: render the logo bitmap, then select the theme
+if command -v rsvg-convert >/dev/null 2>&1 \
+    && [ -f /usr/share/icons/argon/argon-logo-mono.svg ] \
+    && [ -d /usr/share/plymouth/themes/argon ]; then
+    rsvg-convert -w 192 -h 192 \
+        -o /usr/share/plymouth/themes/argon/logo.png \
+        /usr/share/icons/argon/argon-logo-mono.svg || true
+fi
+if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+    if [ -f /usr/share/plymouth/themes/argon/logo.png ]; then
+        plymouth-set-default-theme argon || true
+    fi
+fi
+
+# Calamares branding bitmaps (referenced by branding.desc)
+if command -v rsvg-convert >/dev/null 2>&1 \
+    && [ -d /etc/calamares/branding/argon ]; then
+    rsvg-convert -w 128 -h 128 \
+        -o /etc/calamares/branding/argon/logo.png \
+        /usr/share/icons/argon/argon-logo.svg || true
+    rsvg-convert -w 320 -h 320 \
+        -o /etc/calamares/branding/argon/welcome.png \
+        /usr/share/icons/argon/argon-logo.svg || true
+fi
+
+# Render the SVG wallpaper to PNG for components that cannot read SVG
+if command -v rsvg-convert >/dev/null 2>&1 \
+    && [ -f /usr/share/backgrounds/argon/argon-default.svg ]; then
+    rsvg-convert -w 3840 -h 2160 \
+        -o /usr/share/backgrounds/argon/argon-default.png \
+        /usr/share/backgrounds/argon/argon-default.svg || true
+fi

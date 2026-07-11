@@ -1,0 +1,75 @@
+// Argon OS plymouth boot splash
+// Dark background, centered logo, text-based progress indicator.
+// logo.png is rendered from branding/logo/argon-logo-mono.svg at image
+// build time (see hook 0100-argon-branding.hook.chroot).
+
+Window.SetBackgroundTopColor(0.043, 0.071, 0.125);     // #0B1220
+Window.SetBackgroundBottomColor(0.086, 0.129, 0.227);  // #16213A
+
+logo.image = Image("logo.png");
+logo.sprite = Sprite(logo.image);
+logo.sprite.SetX(Window.GetWidth()  / 2 - logo.image.GetWidth()  / 2);
+logo.sprite.SetY(Window.GetHeight() / 2 - logo.image.GetHeight() / 2 - 40);
+logo.sprite.SetOpacity(1);
+
+baseline = Window.GetHeight() / 2 + logo.image.GetHeight() / 2 + 40;
+
+// --- progress dots ----------------------------------------------------------
+// 20 slots filled left to right: ●●●●●○○○... (text rendering only, no
+// image assets, so it works on every plymouth build)
+progress_sprite = Sprite();
+progress_sprite.SetPosition(Window.GetWidth() / 2, baseline, 2);
+
+fun progress_callback(duration, progress) {
+    slots = 20;
+    filled = Math.Int(slots * progress);
+    line = "";
+    for (i = 0; i < slots; i++) {
+        if (i < filled)
+            line += "●";
+        else
+            line += "○";
+    }
+    img = Image.Text(line, 0.369, 0.506, 0.675);  // #5E81AC
+    progress_sprite.SetImage(img);
+    progress_sprite.SetX(Window.GetWidth() / 2 - img.GetWidth() / 2);
+}
+Plymouth.SetBootProgressFunction(progress_callback);
+
+// --- passphrase prompt (LUKS unlock) ----------------------------------------
+prompt_sprite = Sprite();
+prompt_sprite.SetPosition(Window.GetWidth() / 2, baseline + 40, 3);
+
+fun display_question_callback(prompt_text, entry) {
+    msg = Image.Text(prompt_text + " " + entry + "_", 0.925, 0.937, 0.957);
+    prompt_sprite.SetImage(msg);
+    prompt_sprite.SetX(Window.GetWidth() / 2 - msg.GetWidth() / 2);
+}
+
+fun display_password_callback(prompt_text, bullets) {
+    dots = "";
+    for (i = 0; i < bullets; i++)
+        dots += "•";
+    msg = Image.Text(prompt_text + " " + dots, 0.925, 0.937, 0.957);
+    prompt_sprite.SetImage(msg);
+    prompt_sprite.SetX(Window.GetWidth() / 2 - msg.GetWidth() / 2);
+}
+
+fun display_normal_callback() {
+    prompt_sprite.SetImage(Image.Text("", 0, 0, 0));
+}
+
+Plymouth.SetDisplayQuestionFunction(display_question_callback);
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+
+// --- status messages ---------------------------------------------------------
+message_sprite = Sprite();
+message_sprite.SetPosition(Window.GetWidth() / 2, Window.GetHeight() - 60, 3);
+
+fun message_callback(text) {
+    msg = Image.Text(text, 0.62, 0.67, 0.75);
+    message_sprite.SetImage(msg);
+    message_sprite.SetX(Window.GetWidth() / 2 - msg.GetWidth() / 2);
+}
+Plymouth.SetMessageFunction(message_callback);

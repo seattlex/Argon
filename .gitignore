@@ -1,0 +1,44 @@
+# live-build working tree (assembled/generated in build/)
+build/config/
+build/cache/
+build/chroot/
+build/binary/
+build/local/
+build/.build/
+build/build.log
+build/chroot.files
+build/chroot.packages*
+build/live-image-*
+build/argon-*.iso*
+
+# Build outputs
+iso/*.iso
+iso/*.sha256
+iso/*.sig
+iso/*.packages
+iso/*.log
+
+# Debian package build artifacts
+packages/*.deb
+packages/*.changes
+packages/*.buildinfo
+packages/*.build
+packages/*.dsc
+packages/*.tar.*
+packages/dist/
+packages/argon-meta/debian/argon-*/
+packages/argon-meta/debian/.debhelper/
+packages/argon-meta/debian/files
+packages/argon-meta/debian/debhelper-build-stamp
+packages/argon-meta/debian/*.substvars
+
+# reprepro generated state (only conf/ is versioned)
+packages/repo/db/
+packages/repo/dists/
+packages/repo/pool/
+packages/repo/lists/
+
+# Editors / OS noise
+*~
+*.swp
+.DS_Store

@@ -1,0 +1,20 @@
+# Argon OS — fail2ban defaults
+# fail2ban is enabled by default. Only the sshd jail is active out of the
+# box (and sshd itself is disabled by default); enable more jails here as
+# you enable services.
+
+[DEFAULT]
+# Ban for 1 hour after 3 failures within 10 minutes; repeat offenders
+# get exponentially longer bans.
+bantime = 1h
+findtime = 10m
+maxretry = 3
+bantime.increment = true
+bantime.factor = 2
+bantime.maxtime = 1w
+# UFW is Argon's firewall front-end, so ban through it
+banaction = ufw
+backend = systemd
+
+[sshd]
+enabled = true

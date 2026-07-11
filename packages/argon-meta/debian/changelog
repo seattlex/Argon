@@ -1,0 +1,6 @@
+argon-meta (0.1.0) argon-rolling; urgency=medium
+
+  * Initial release: argon-core, argon-desktop-xfce, argon-privacy-tools
+    and argon-dev-tools metapackages.
+
+ -- The Argon Project <argon@example.org>  Fri, 11 Jul 2026 12:00:00 +0000

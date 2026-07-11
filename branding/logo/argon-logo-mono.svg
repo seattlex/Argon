@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Argon OS logo, monochrome variant (for terminals, watermarks, plymouth).
+       Single colour; recolour via CSS `fill` or sed. -->
+  <g fill="#ECEFF4">
+    <polygon points="256,96 296,96 176,416 116,416"/>
+    <polygon points="256,96 296,96 396,416 336,416"/>
+    <polygon points="208,300 322,300 340,344 190,344"/>
+    <circle cx="256" cy="96" r="18"/>
+  </g>
+</svg>

@@ -1,0 +1,28 @@
+#!/bin/sh
+# Argon OS — reduce image size and strip identifying build artifacts.
+set -e
+
+echo "argon: cleaning up image"
+
+# APT caches (also improves reproducibility: cache contents vary per build)
+apt-get -y autoremove --purge || true
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+mkdir -p /var/lib/apt/lists/partial
+
+# Logs created while packages configured themselves in the chroot
+find /var/log -type f -delete || true
+
+# Random seed must never be shipped: identical seeds across images would
+# correlate early-boot randomness on every installation.
+rm -f /var/lib/systemd/random-seed /var/lib/random-seed
+
+# machine-id must be empty (not absent) so systemd generates a fresh one
+# per system on first boot.
+: > /etc/machine-id
+rm -f /var/lib/dbus/machine-id
+ln -sf /etc/machine-id /var/lib/dbus/machine-id
+
+# Editor/backup leftovers from hooks
+find /etc -name '*.dpkg-old' -delete || true
+find /etc -name '*~' -delete || true

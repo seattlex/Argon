@@ -1,0 +1,72 @@
+# Argon OS — base system
+# Kept deliberately minimal: every package here must justify itself.
+# The kernel is selected by live-build itself (--linux-flavours in auto/config).
+
+## Core system
+systemd
+sudo
+apt
+apt-transport-https
+gnupg
+ca-certificates
+locales
+console-setup
+keyboard-configuration
+zstd
+
+## Live boot
+live-boot
+live-config
+live-config-systemd
+plymouth
+plymouth-themes
+
+## Firmware (non-free-firmware area; needed for real hardware support)
+firmware-linux-free
+firmware-misc-nonfree
+firmware-realtek
+firmware-atheros
+firmware-iwlwifi
+
+## Networking
+network-manager
+wireguard-tools
+openvpn
+
+## Security hardening (installed AND enabled by default — see hooks/)
+apparmor
+apparmor-profiles
+apparmor-utils
+ufw
+fail2ban
+unattended-upgrades
+apt-listchanges
+needrestart
+
+## Privacy
+tor
+torsocks
+mat2
+chrony
+
+## Secure remote access (installed but disabled by default — see hooks/)
+openssh-client
+openssh-server
+
+## Base utilities
+bash-completion
+curl
+wget
+git
+vim
+nano
+htop
+less
+man-db
+rsync
+unzip
+p7zip-full
+cryptsetup
+btrfs-progs
+dosfstools
+gparted
