@@ -7,6 +7,11 @@ release tags.
 ## [Unreleased]
 
 ### Added
+- Audio production support: Creative & Audio catalog category (LMMS,
+  Ardour, Carla, qpwgraph, EasyEffects, Hydrogen, Wine) and
+  `argon-virtual-audio`, a helper that creates Voicemeeter-style virtual
+  audio cables on PipeWire; audio-production guide covering the Voicemeeter,
+  FL Studio (via Wine) and VST-plugin workflows
 - Argon Software — first-party GTK software center: curated categories
   (incl. defensive Security & Analysis), search, one-click install/remove
   through a polkit-authenticated helper, package "bundles"; no network

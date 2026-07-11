@@ -53,6 +53,17 @@ it). It offers the handful of things a new user actually wants:
 Run `argon-welcome` any time to reopen it; `--autostart` makes it exit
 silently if the user turned it off.
 
+## Argon Virtual Audio
+
+`argon-virtual-audio` is a small command-line tool that creates
+Voicemeeter-style virtual audio cables on top of PipeWire
+(`enable [N]` / `disable` / `status`). Each cable is both an output apps
+can play into and an input others can record from, which — combined with
+qpwgraph for routing and EasyEffects for processing — replaces a
+Voicemeeter setup. It writes a per-user PipeWire drop-in and needs no
+root. Full workflow, plus FL Studio and VST guidance, is in
+[audio-production.md](audio-production.md).
+
 ## Boot menu
 
 Argon ships its own branded boot menu for both firmware types

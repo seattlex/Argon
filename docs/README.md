@@ -6,6 +6,7 @@
 | [building.md](building.md) | Building the ISO and the Argon packages from source |
 | [installation.md](installation.md) | Installing Argon (live session, Calamares, disk encryption) |
 | [applications.md](applications.md) | Argon Software (the app store) and Argon Welcome |
+| [audio-production.md](audio-production.md) | Voicemeeter, FL Studio and VST plugins on Argon (PipeWire) |
 | [hardening.md](hardening.md) | Security defaults: what is enabled, why, and how to adjust it |
 | [privacy.md](privacy.md) | Privacy defaults: DNS, MAC randomization, browser, time sync |
 | [repository.md](repository.md) | Using and operating the Argon APT repository |

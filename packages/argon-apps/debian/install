@@ -1,5 +1,6 @@
 bin/argon-software usr/bin
 bin/argon-welcome usr/bin
+bin/argon-virtual-audio usr/bin
 libexec/argon-pkg-helper usr/libexec/argon
 data/software-catalog.json usr/share/argon
 data/argon-software.desktop usr/share/applications

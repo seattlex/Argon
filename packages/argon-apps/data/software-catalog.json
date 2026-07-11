@@ -86,6 +86,21 @@
       ]
     },
     {
+      "id": "creative",
+      "name": "Creative & Audio",
+      "icon": "applications-multimedia",
+      "apps": [
+        { "id": "music-studio", "name": "Music Studio", "summary": "One-click studio: LMMS, Carla plugin host, EasyEffects and the audio patchbay", "icon": "lmms", "packages": ["lmms", "carla", "qpwgraph", "easyeffects"] },
+        { "id": "lmms", "name": "LMMS", "summary": "Beat/pattern-based music production — the closest free tool to FL Studio", "icon": "lmms", "packages": ["lmms"] },
+        { "id": "ardour", "name": "Ardour", "summary": "Professional multitrack recording, editing and mixing DAW", "icon": "ardour", "packages": ["ardour"] },
+        { "id": "carla", "name": "Carla", "summary": "Audio plugin host — load VST2/VST3/LV2/CLAP plugins and bridge Windows VSTs", "icon": "carla", "packages": ["carla"] },
+        { "id": "qpwgraph", "name": "qpwgraph", "summary": "Visual audio routing (patchbay) — the PipeWire answer to Voicemeeter", "icon": "org.rncbc.qpwgraph", "packages": ["qpwgraph"] },
+        { "id": "easyeffects", "name": "EasyEffects", "summary": "System-wide EQ, compressor and effects for inputs and outputs", "icon": "com.github.wwmm.easyeffects", "packages": ["easyeffects"] },
+        { "id": "hydrogen", "name": "Hydrogen", "summary": "Pattern-based drum machine and sequencer", "icon": "hydrogen", "packages": ["hydrogen"] },
+        { "id": "wine-audio", "name": "Wine (run Windows apps)", "summary": "Compatibility layer for running Windows software such as FL Studio", "icon": "wine", "packages": ["wine", "winetricks"] }
+      ]
+    },
+    {
       "id": "office",
       "name": "Office & Graphics",
       "icon": "applications-office",
