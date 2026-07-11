@@ -7,6 +7,19 @@ release tags.
 ## [Unreleased]
 
 ### Added
+- Argon Software — first-party GTK software center: curated categories
+  (incl. defensive Security & Analysis), search, one-click install/remove
+  through a polkit-authenticated helper, package "bundles"; no network
+  services, local catalog
+- Argon Welcome — first-login greeter: install, get software, review
+  privacy defaults, docs; autostart with an off switch
+- `argon-apps` Debian package (built and baked into the ISO via
+  `packages.chroot`, so images are self-contained)
+- Branded boot menu for both firmware types: dark Nordic GRUB (UEFI) and
+  isolinux (BIOS) with live / safe-graphics / to-RAM / failsafe entries
+- XFCE desktop identity: Argon panel layout and window-manager defaults
+- Beginner "Getting Started" guide (download → USB → install, no terminal
+  or Kali required) and an applications guide
 - live-build ISO pipeline on Kali rolling (XFCE variant, UEFI + BIOS,
   hybrid ISO) with reproducibility measures (`SOURCE_DATE_EPOCH`,
   per-build state stripped)

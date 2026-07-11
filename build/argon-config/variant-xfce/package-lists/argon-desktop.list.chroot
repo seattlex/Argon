@@ -51,5 +51,9 @@ xdg-utils
 ## fail2ban systemd backend (recommends are off)
 python3-systemd
 
+## Runtime for Argon's own apps (argon-apps.deb via packages.chroot)
+python3-gi
+gir1.2-gtk-3.0
+
 ## Installer (live session only)
 calamares

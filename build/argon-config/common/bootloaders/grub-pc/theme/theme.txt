@@ -1,0 +1,43 @@
+# Argon OS — GRUB theme (dark Nordic)
+title-text: ""
+desktop-image: "argon-splash.png"
+desktop-color: "#0b1220"
+terminal-font: "Unifont Regular 16"
+
++ boot_menu {
+    left = 22%
+    top = 42%
+    width = 56%
+    height = 44%
+    item_font = "Unifont Regular 16"
+    item_color = "#9aa8bd"
+    selected_item_color = "#eceff4"
+    item_height = 32
+    item_padding = 8
+    item_spacing = 4
+    selected_item_pixmap_style = "select_*.png"
+}
+
++ label {
+    top = 32%
+    left = 0
+    width = 100%
+    align = "center"
+    color = "#88a5c8"
+    font = "Unifont Regular 16"
+    text = "Argon OS  —  privacy first, security by default"
+}
+
++ progress_bar {
+    id = "__timeout__"
+    left = 22%
+    top = 88%
+    width = 56%
+    height = 14
+    show_text = true
+    text_color = "#9aa8bd"
+    fg_color = "#5e81ac"
+    bg_color = "#22304a"
+    border_color = "#22304a"
+    text = "Booting in %d s"
+}

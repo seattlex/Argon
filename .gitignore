@@ -18,7 +18,7 @@ iso/*.sig
 iso/*.packages
 iso/*.log
 
-# Debian package build artifacts
+# Debian package build artifacts (any package under packages/)
 packages/*.deb
 packages/*.changes
 packages/*.buildinfo
@@ -26,11 +26,18 @@ packages/*.build
 packages/*.dsc
 packages/*.tar.*
 packages/dist/
-packages/argon-meta/debian/argon-*/
-packages/argon-meta/debian/.debhelper/
-packages/argon-meta/debian/files
-packages/argon-meta/debian/debhelper-build-stamp
-packages/argon-meta/debian/*.substvars
+packages/*/debian/.debhelper/
+packages/*/debian/files
+packages/*/debian/debhelper-build-stamp
+packages/*/debian/*.substvars
+packages/*/debian/*.debhelper.log
+# debhelper staging dirs: any dir under debian/ that isn't tracked source.
+# These match the binary package build trees (debian/<pkg>/).
+packages/argon-meta/debian/argon-core/
+packages/argon-meta/debian/argon-desktop-xfce/
+packages/argon-meta/debian/argon-privacy-tools/
+packages/argon-meta/debian/argon-dev-tools/
+packages/argon-apps/debian/argon-apps/
 
 # reprepro generated state (only conf/ is versioned)
 packages/repo/db/

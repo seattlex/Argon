@@ -1,0 +1,6 @@
+argon-apps (0.1.0) argon-rolling; urgency=medium
+
+  * Initial release: Argon Software (curated software center) and
+    Argon Welcome (first-login greeter).
+
+ -- The Argon Project <argon@example.org>  Sat, 11 Jul 2026 12:00:00 +0000

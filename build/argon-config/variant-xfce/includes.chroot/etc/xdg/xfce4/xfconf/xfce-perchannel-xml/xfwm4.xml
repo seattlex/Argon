@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Argon OS — window manager defaults -->
+<channel name="xfwm4" version="1.0">
+  <property name="general" type="empty">
+    <property name="theme" type="string" value="Arc-Dark"/>
+    <property name="title_font" type="string" value="Noto Sans Bold 10"/>
+    <property name="button_layout" type="string" value="O|HMC"/>
+    <property name="click_to_focus" type="bool" value="true"/>
+    <property name="focus_delay" type="int" value="250"/>
+    <property name="snap_to_border" type="bool" value="true"/>
+    <property name="snap_to_windows" type="bool" value="true"/>
+    <property name="tile_on_move" type="bool" value="true"/>
+    <property name="workspace_count" type="int" value="2"/>
+    <property name="use_compositing" type="bool" value="true"/>
+    <property name="show_frame_shadow" type="bool" value="true"/>
+    <property name="placement_mode" type="string" value="center"/>
+  </property>
+</channel>

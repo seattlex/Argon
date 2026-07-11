@@ -1,0 +1,32 @@
+Source: argon-apps
+Section: admin
+Priority: optional
+Maintainer: The Argon Project <argon@example.org>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/seattlex/argon
+Vcs-Git: https://github.com/seattlex/argon.git
+Vcs-Browser: https://github.com/seattlex/argon
+Rules-Requires-Root: no
+
+Package: argon-apps
+Architecture: all
+Depends: ${misc:Depends},
+ python3,
+ python3-gi,
+ gir1.2-gtk-3.0,
+ pkexec | policykit-1
+Recommends: papirus-icon-theme
+Suggests: calamares
+Description: Argon OS first-party applications
+ Argon's own desktop applications:
+ .
+  * Argon Software — a curated software center. Browse categories,
+    search, and install or remove applications with one click; package
+    operations are authenticated through polkit.
+  * Argon Welcome — the first-login greeter that points new users at
+    the installer, the software center, the privacy defaults and the
+    documentation.
+ .
+ Neither application communicates with any network service; the catalog
+ is local and installs go through APT.

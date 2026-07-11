@@ -38,12 +38,32 @@ Argon tracks **Kali rolling**, so the entire Kali package ecosystem is
 available via `apt` — but none of it is preinstalled and nothing listens
 by default. See [docs/security-tools.md](docs/security-tools.md).
 
+## First-party experience
+
+Argon isn't a re-skin — it has its own applications:
+
+* **Argon Software** — a graphical app store. Browse curated categories
+  or search, then install/remove with one click and a password prompt.
+  No terminal, ever.
+* **Argon Welcome** — a first-login greeter: install the system, get
+  software, review your privacy defaults, find the docs.
+* **Argon boot menu** — branded GRUB (UEFI) and isolinux (BIOS) menus.
+* **Argon desktop** — a dark Nordic XFCE layout, not stock XFCE.
+
+More in [docs/applications.md](docs/applications.md).
+
 ## Get Argon
 
-Grab an ISO from the releases page (weekly rolling snapshots + versioned
-releases), verify it, write it to USB, boot:
+**New to this?** The [Getting Started guide](docs/getting-started.md)
+walks you from download to a running desktop with no prior Linux
+experience — you don't need Kali or a terminal.
 
-* [Installation guide](docs/installation.md)
+Grab an ISO from the releases page (weekly rolling snapshots + versioned
+releases), verify it, write it to USB with
+[balenaEtcher](https://etcher.balena.io/), and boot:
+
+* [Getting started (beginners)](docs/getting-started.md)
+* [Installation guide (detailed)](docs/installation.md)
 * [Verifying downloads](docs/reproducible-builds.md#verifying-a-release-current-state)
 
 ## Build it yourself
@@ -62,9 +82,10 @@ Full instructions: [docs/building.md](docs/building.md).
 
 ```
 build/       live-build configuration (the OS is defined here)
+             └ bootloaders/  branded GRUB (UEFI) + isolinux (BIOS) menus
 installer/   Calamares installer configuration and branding
-packages/    Argon metapackages + APT repository (reprepro)
-branding/    logo, plymouth boot theme
+packages/    Argon apps (Software + Welcome) + metapackages + APT repo
+branding/    logo, plymouth boot theme, boot-menu splash
 wallpapers/  wallpaper sources
 scripts/     build, sign, and repo-management entry points
 docs/        documentation

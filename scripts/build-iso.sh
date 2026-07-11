@@ -81,6 +81,26 @@ cp -a "$REPO_ROOT/branding/logo/." "$CHROOT_INC/usr/share/icons/argon/"
 mkdir -p "$CHROOT_INC/etc/calamares"
 cp -a "$REPO_ROOT/installer/calamares/." "$CHROOT_INC/etc/calamares/"
 
+# Bootloaders: Argon-branded GRUB (UEFI) and isolinux (BIOS) menus.
+# live-build reads customizations from config/bootloaders/.
+if [ -d "$BUILD_DIR/config/bootloaders" ]; then
+    # Render the boot splash to PNG for both bootloaders (best effort).
+    if command -v rsvg-convert >/dev/null 2>&1; then
+        rsvg-convert -w 960 -h 720 \
+            -o "$BUILD_DIR/config/bootloaders/isolinux/splash.png" \
+            "$REPO_ROOT/branding/boot-splash.svg" 2>/dev/null || true
+        rsvg-convert -w 960 -h 720 \
+            -o "$BUILD_DIR/config/bootloaders/grub-pc/argon-splash.png" \
+            "$REPO_ROOT/branding/boot-splash.svg" 2>/dev/null || true
+        if [ -d "$BUILD_DIR/config/bootloaders/grub-pc/theme" ]; then
+            cp "$BUILD_DIR/config/bootloaders/grub-pc/argon-splash.png" \
+               "$BUILD_DIR/config/bootloaders/grub-pc/theme/" 2>/dev/null || true
+        fi
+    else
+        echo "    (rsvg-convert missing: boot menu will use its background colour)"
+    fi
+fi
+
 # Version marker read by the branding hook
 echo "$VERSION" > "$CHROOT_INC/etc/argon_version"
 
@@ -91,6 +111,32 @@ if [ "$SKIP_BUILD" -eq 1 ]; then
     echo "==> Config assembled at $BUILD_DIR/config (build skipped)"
     exit 0
 fi
+
+# Argon's own applications: build the debs and bake them into the image
+# (live-build installs everything in config/packages.chroot/). This keeps
+# the ISO self-contained — no hosted Argon repository required. Only needed
+# for a real build, so it runs after the --skip-build early exit above.
+find_apps_deb() {
+    find "$REPO_ROOT/packages/dist" -maxdepth 1 -name 'argon-apps_*_all.deb' \
+        2>/dev/null | sort -V | tail -n1
+}
+APPS_DEB="$(find_apps_deb)"
+if [ -z "$APPS_DEB" ]; then
+    if command -v dpkg-buildpackage >/dev/null 2>&1; then
+        "$REPO_ROOT/scripts/build-packages.sh"
+        APPS_DEB="$(find_apps_deb)"
+    else
+        echo "ERROR: packages/dist/argon-apps_*.deb missing and dpkg-buildpackage" >&2
+        echo "       is not installed. Run: apt install build-essential debhelper" >&2
+        exit 1
+    fi
+fi
+if [ -z "$APPS_DEB" ]; then
+    echo "ERROR: argon-apps package did not build" >&2
+    exit 1
+fi
+mkdir -p "$BUILD_DIR/config/packages.chroot"
+cp "$APPS_DEB" "$BUILD_DIR/config/packages.chroot/"
 
 # Reproducibility: derive timestamps from the last git commit
 if [ -z "${SOURCE_DATE_EPOCH:-}" ]; then

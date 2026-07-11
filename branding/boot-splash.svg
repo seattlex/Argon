@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720">
+  <!-- Argon OS boot-menu background (rendered to PNG at build time). -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B1220"/>
+      <stop offset="1" stop-color="#16213A"/>
+    </linearGradient>
+    <linearGradient id="peak" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#5E81AC"/>
+      <stop offset="1" stop-color="#88A5C8"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="720" fill="url(#sky)"/>
+
+  <!-- logo, upper third -->
+  <g transform="translate(432,120) scale(0.38)" stroke-linejoin="miter">
+    <polygon points="256,96 296,96 176,416 116,416" fill="#ECEFF4"/>
+    <polygon points="256,96 296,96 396,416 336,416" fill="url(#peak)"/>
+    <polygon points="208,300 322,300 340,344 190,344" fill="#4C566A"/>
+    <circle cx="256" cy="96" r="18" fill="#ECEFF4"/>
+  </g>
+
+  <!-- faint mountain silhouette along the bottom -->
+  <polygon fill="#131d30" opacity="0.9"
+    points="0,600 160,510 320,590 480,500 640,585 800,505 960,595 960,720 0,720"/>
+  <polygon fill="#0d1524"
+    points="0,660 200,590 420,650 640,585 860,650 960,610 960,720 0,720"/>
+</svg>

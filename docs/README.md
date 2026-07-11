@@ -2,8 +2,10 @@
 
 | Document | Contents |
 | --- | --- |
+| [getting-started.md](getting-started.md) | **New here? Start with this.** Download → USB → install, no terminal |
 | [building.md](building.md) | Building the ISO and the Argon packages from source |
 | [installation.md](installation.md) | Installing Argon (live session, Calamares, disk encryption) |
+| [applications.md](applications.md) | Argon Software (the app store) and Argon Welcome |
 | [hardening.md](hardening.md) | Security defaults: what is enabled, why, and how to adjust it |
 | [privacy.md](privacy.md) | Privacy defaults: DNS, MAC randomization, browser, time sync |
 | [repository.md](repository.md) | Using and operating the Argon APT repository |
@@ -20,11 +22,14 @@ traced back to a file here:
 ```
 build/argon-config/   live-build configuration (package lists, hooks, files)
   common/             applies to every variant
-  variant-xfce/       XFCE desktop variant overlay
+    bootloaders/      Argon-branded GRUB (UEFI) + isolinux (BIOS) menus
+  variant-xfce/       XFCE desktop variant overlay (panel, wm, theme)
 installer/calamares/  installer sequence, module configs, branding
-branding/             logo and plymouth boot theme sources
+branding/             logo, plymouth boot theme, boot-menu splash sources
 wallpapers/           wallpaper sources (SVG)
 packages/             Argon's own Debian packages + APT repo (reprepro)
+  argon-apps/         Argon Software (app store) + Argon Welcome (greeter)
+  argon-meta/         metapackages
 scripts/              build-iso.sh, build-packages.sh, manage-repo.sh, sign-release.sh
 ci/                   lint suite run by GitHub Actions
 docs/                 you are here

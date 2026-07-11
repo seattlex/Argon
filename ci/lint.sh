@@ -12,7 +12,8 @@ FAIL=0
 echo "==> shellcheck"
 # All tracked shell scripts: scripts/, ci/, live-build auto/ and hooks
 mapfile -t SCRIPTS < <(
-    git ls-files 'scripts/*.sh' 'ci/*.sh' 'build/auto/*' 'build/argon-config/**/hooks/**'
+    git ls-files 'scripts/*.sh' 'ci/*.sh' 'build/auto/*' \
+        'build/argon-config/**/hooks/**' 'packages/argon-apps/libexec/*'
 )
 for f in "${SCRIPTS[@]}"; do
     head -1 "$f" | grep -q '^#!' || continue
@@ -20,6 +21,14 @@ for f in "${SCRIPTS[@]}"; do
         FAIL=1
     fi
 done
+
+echo "==> Python syntax (Argon apps)"
+while IFS= read -r f; do
+    if ! python3 -m py_compile "$f"; then
+        echo "python syntax error: $f"
+        FAIL=1
+    fi
+done < <(git ls-files 'packages/argon-apps/bin/*')
 
 echo "==> JSON validation"
 while IFS= read -r f; do

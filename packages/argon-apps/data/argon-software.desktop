@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Argon Software
+GenericName=Software Center
+Comment=Install and remove curated applications
+Exec=argon-software
+Icon=argon
+Terminal=false
+Categories=System;PackageManager;GTK;
+Keywords=install;remove;app;store;software;package;
+StartupNotify=true
