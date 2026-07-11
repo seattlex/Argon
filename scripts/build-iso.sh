@@ -117,8 +117,11 @@ fi
 # the ISO self-contained — no hosted Argon repository required. Only needed
 # for a real build, so it runs after the --skip-build early exit above.
 find_apps_deb() {
+    # packages/dist does not exist on a fresh checkout; find would fail and,
+    # under pipefail, silently abort the whole script.
+    [ -d "$REPO_ROOT/packages/dist" ] || return 0
     find "$REPO_ROOT/packages/dist" -maxdepth 1 -name 'argon-apps_*_all.deb' \
-        2>/dev/null | sort -V | tail -n1
+        | sort -V | tail -n1
 }
 APPS_DEB="$(find_apps_deb)"
 if [ -z "$APPS_DEB" ]; then
