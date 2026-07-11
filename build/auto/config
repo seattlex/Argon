@@ -33,6 +33,9 @@ lb config noauto \
     --mirror-binary "$ARGON_MIRROR" \
     --mirror-chroot "$ARGON_MIRROR" \
     --keyring-packages kali-archive-keyring \
+    --security false \
+    --updates false \
+    --backports false \
     --apt-recommends false \
     --binary-images iso-hybrid \
     --bootloaders "grub-efi syslinux" \

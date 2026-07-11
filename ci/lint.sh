@@ -9,26 +9,38 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 FAIL=0
 
-echo "==> shellcheck"
-# All tracked shell scripts: scripts/, ci/, live-build auto/ and hooks
-mapfile -t SCRIPTS < <(
+# Collect every tracked executable script, then route each to shellcheck or
+# py_compile by its shebang. bin/ mixes Python apps and shell helpers, so
+# directory globs alone can't tell them apart.
+mapfile -t CANDIDATES < <(
     git ls-files 'scripts/*.sh' 'ci/*.sh' 'build/auto/*' \
-        'build/argon-config/**/hooks/**' 'packages/argon-apps/libexec/*'
+        'build/argon-config/**/hooks/**' \
+        'packages/argon-apps/bin/*' 'packages/argon-apps/libexec/*'
 )
-for f in "${SCRIPTS[@]}"; do
-    head -1 "$f" | grep -q '^#!' || continue
+SH_FILES=()
+PY_FILES=()
+for f in "${CANDIDATES[@]}"; do
+    shebang="$(head -1 "$f")"
+    case "$shebang" in
+        '#!'*python*) PY_FILES+=("$f") ;;
+        '#!'*)        SH_FILES+=("$f") ;;  # any other shebang -> shellcheck
+    esac
+done
+
+echo "==> shellcheck"
+for f in "${SH_FILES[@]}"; do
     if ! shellcheck -x "$f"; then
         FAIL=1
     fi
 done
 
 echo "==> Python syntax (Argon apps)"
-while IFS= read -r f; do
+for f in "${PY_FILES[@]}"; do
     if ! python3 -m py_compile "$f"; then
         echo "python syntax error: $f"
         FAIL=1
     fi
-done < <(git ls-files 'packages/argon-apps/bin/*')
+done
 
 echo "==> JSON validation"
 while IFS= read -r f; do
