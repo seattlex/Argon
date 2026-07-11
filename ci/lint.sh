@@ -20,6 +20,10 @@ mapfile -t CANDIDATES < <(
 SH_FILES=()
 PY_FILES=()
 for f in "${CANDIDATES[@]}"; do
+    # Skip anything that isn't a readable regular file (e.g. a stale tracked
+    # path, or compiled bytecode under __pycache__).
+    [ -f "$f" ] || continue
+    case "$f" in */__pycache__/*|*.pyc) continue ;; esac
     shebang="$(head -1 "$f")"
     case "$shebang" in
         '#!'*python*) PY_FILES+=("$f") ;;

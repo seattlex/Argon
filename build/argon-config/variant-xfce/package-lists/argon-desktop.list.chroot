@@ -10,7 +10,8 @@ lightdm
 lightdm-gtk-greeter
 light-locker
 dbus-x11
-policykit-1
+polkitd
+pkexec
 mate-polkit
 
 ## XFCE core

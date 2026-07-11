@@ -45,6 +45,10 @@ packages/repo/dists/
 packages/repo/pool/
 packages/repo/lists/
 
+# Python bytecode (created by the lint's py_compile check)
+__pycache__/
+*.pyc
+
 # Editors / OS noise
 *~
 *.swp
