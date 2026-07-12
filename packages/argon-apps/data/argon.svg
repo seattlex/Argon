@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <!-- Argon OS app icon — white arrowhead "A" on a dark rounded square. -->
-  <rect x="16" y="16" width="480" height="480" rx="104" fill="#0B1220"/>
-  <g fill="#ECEFF4">
-    <polygon points="256,78 86,438 210,438"/>
-    <polygon points="256,78 426,438 302,438"/>
-    <path d="M212 414 Q256 358 300 414 Q256 390 212 414 Z"/>
-  </g>
-</svg>

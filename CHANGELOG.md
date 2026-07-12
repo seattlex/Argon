@@ -15,8 +15,12 @@ release tags.
   are unaffected (you create your own account in the installer).
 
 ### Changed
-- New Argon logo: a bolder arrowhead "A" with a swoosh base, applied across
-  the branding logos, app icon, wallpaper, boot splash and website.
+- Official Argon artwork: the real logo (arrowhead "A" with a swoosh base),
+  a Nordic-mountains desktop wallpaper, and a starfield login background,
+  wired through the app icon (hicolor 48–512 px), Plymouth boot splash,
+  Calamares installer, boot menu, desktop and login screen. The branding
+  pipeline now ships ready-made PNGs instead of rendering from SVG at build
+  time (fewer build dependencies, fully reproducible).
 - Welcome screen now shows a clear live-session banner (credentials + "click
   Install to create your own account").
 
