@@ -1,31 +1,28 @@
 name: Build ISO
 
 on:
+  # Manual, on-demand builds from the Actions tab (available once this
+  # workflow is on the default branch).
   workflow_dispatch:
     inputs:
       variant:
         description: "Desktop variant"
         default: "xfce"
         required: true
+  # Release builds: pushing a version tag produces a signed GitHub Release.
   push:
     tags:
       - "v*"
-  pull_request:
-    branches: [ main ]
-    # Only rebuild the (heavy) ISO when something that affects it changes,
-    # so documentation-only PRs stay fast.
-    paths:
-      - "build/**"
-      - "packages/**"
-      - "installer/**"
-      - "branding/**"
-      - "wallpapers/**"
-      - "scripts/build-iso.sh"
-      - "scripts/build-packages.sh"
-      - ".github/workflows/build-iso.yml"
+  # Weekly rolling snapshot, Monday 03:00 UTC.
   schedule:
-    # Weekly rolling build, Monday 03:00 UTC
     - cron: "0 3 * * 1"
+
+# NOTE: the ISO build deliberately does NOT run on every push/PR — a full
+# build is ~15 minutes and downloads ~2 GB, so running it per-commit is
+# wasteful and noisy. Fast checks (shellcheck, config assembly) live in the
+# separate Lint workflow, which does run on PRs. To produce an ISO, use the
+# "Run workflow" button (after merge to main), push a v* tag, or wait for
+# the weekly schedule.
 
 permissions:
   contents: write
