@@ -45,11 +45,10 @@
   </g>
 
   <!-- Argon "A" mark, faint, centre-high -->
-  <g transform="translate(1770,690) scale(0.62)" opacity="0.16" fill="#ECEFF4">
-    <polygon points="256,96 296,96 176,416 116,416"/>
-    <polygon points="256,96 296,96 396,416 336,416"/>
-    <polygon points="208,300 322,300 340,344 190,344"/>
-    <circle cx="256" cy="96" r="18"/>
+  <g transform="translate(1760,700) scale(0.62)" opacity="0.16" fill="#ECEFF4">
+    <polygon points="256,52 62,460 204,460"/>
+    <polygon points="256,52 450,460 308,460"/>
+    <path d="M206 430 Q256 366 306 430 Q256 400 206 430 Z"/>
   </g>
 
   <!-- Mountain ridges, back to front -->

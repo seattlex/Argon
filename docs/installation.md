@@ -22,8 +22,10 @@ sudo dd if=argon-<version>-xfce-amd64.iso of=/dev/sdX bs=4M status=progress ofla
 ## 3. Boot the live system
 
 The image boots on both UEFI and legacy BIOS machines. The live session
-logs in automatically as the `argon` user. Nothing touches your disks
-until you run the installer.
+logs in automatically as the `argon` user (password `argon`, should any
+prompt ask — the automatic screen-lock is disabled in the live session so
+you can't get locked out). Nothing touches your disks until you run the
+installer, and the installer is where you create your own account.
 
 The live session already runs with Argon defaults, so you can check the
 hardware works — Wi-Fi (with a randomized MAC), display, sound — before

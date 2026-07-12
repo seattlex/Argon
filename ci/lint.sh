@@ -15,6 +15,7 @@ FAIL=0
 mapfile -t CANDIDATES < <(
     git ls-files 'scripts/*.sh' 'ci/*.sh' 'build/auto/*' \
         'build/argon-config/**/hooks/**' \
+        'build/argon-config/**/lib/live/config/*' \
         'packages/argon-apps/bin/*' 'packages/argon-apps/libexec/*'
 )
 SH_FILES=()

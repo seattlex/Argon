@@ -102,16 +102,27 @@ jobs:
         if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
-          draft: true
+          # Publish immediately when a v* tag is pushed (no manual draft step).
+          draft: false
+          name: Argon OS ${{ steps.version.outputs.version }}
+          make_latest: true
+          fail_on_unmatched_files: false
           files: |
             iso/*.iso
             iso/*.sha256
             iso/*.sig
           body: |
-            Argon OS ${{ steps.version.outputs.version }}
+            ## Argon OS ${{ steps.version.outputs.version }}
 
-            Verify your download:
+            A privacy-first, security-hardened Kali-based Linux distribution (XFCE).
+
+            **Download** the `.iso` below, write it to a USB stick
+            (e.g. with [balenaEtcher](https://etcher.balena.io/)), and boot.
+            See the [getting-started guide](https://github.com/seattlex/argon/blob/main/docs/getting-started.md).
+
+            ### Verify your download
             ```
-            sha256sum -c argon-*.sha256
-            gpg --verify argon-*.sha256.sig argon-*.sha256
+            sha256sum -c argon-*-amd64.iso.sha256
             ```
+            Signed releases also ship a `.sha256.sig` you can check with
+            `gpg --verify argon-*.sha256.sig argon-*.sha256`.

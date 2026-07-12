@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Argon OS — power manager defaults.
+     Do not lock the screen on suspend/hibernate: a locked screen with an
+     unexpected/unknown password is the #1 way users lock themselves out
+     (especially in the live session). Manual lock remains available. -->
+<channel name="xfce4-power-manager" version="1.0">
+  <property name="xfce4-power-manager" type="empty">
+    <property name="lock-screen-suspend-hibernate" type="bool" value="false"/>
+    <property name="logind-handle-lid-switch" type="bool" value="false"/>
+    <property name="dpms-enabled" type="bool" value="true"/>
+    <property name="blank-on-ac" type="int" value="0"/>
+    <property name="dpms-on-ac-sleep" type="uint" value="0"/>
+    <property name="dpms-on-ac-off" type="uint" value="0"/>
+    <property name="presentation-mode" type="bool" value="false"/>
+  </property>
+</channel>

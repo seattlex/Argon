@@ -13,11 +13,10 @@
   <rect width="960" height="720" fill="url(#sky)"/>
 
   <!-- logo, upper third -->
-  <g transform="translate(432,120) scale(0.38)" stroke-linejoin="miter">
-    <polygon points="256,96 296,96 176,416 116,416" fill="#ECEFF4"/>
-    <polygon points="256,96 296,96 396,416 336,416" fill="url(#peak)"/>
-    <polygon points="208,300 322,300 340,344 190,344" fill="#4C566A"/>
-    <circle cx="256" cy="96" r="18" fill="#ECEFF4"/>
+  <g transform="translate(383,132) scale(0.38)">
+    <polygon points="256,52 62,460 204,460" fill="#ECEFF4"/>
+    <polygon points="256,52 450,460 308,460" fill="url(#peak)"/>
+    <path d="M206 430 Q256 366 306 430 Q256 400 206 430 Z" fill="#ECEFF4"/>
   </g>
 
   <!-- faint mountain silhouette along the bottom -->
