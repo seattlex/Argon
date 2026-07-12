@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="branding/logo/argon-logo.svg" alt="Argon OS" width="128"/>
+  <img src="branding/logo/argon-icon.png" alt="Argon OS" width="128"/>
 </p>
 
 <h1 align="center">Argon OS</h1>
