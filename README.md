@@ -32,23 +32,23 @@ no one else.
 | Network services | Zero listening; ssh/tor/cups installed but opt-in |
 | Kernel | Hardened sysctl baseline (commented, auditable) |
 | Disk encryption | LUKS2 full-disk encryption in the guided installer |
-| Desktop | XFCE, dark Nordic theme, low memory footprint |
+| Desktop | XFCE, low memory footprint |
 
 Argon tracks **Kali rolling**, so the entire Kali package ecosystem is
-available via `apt` — but none of it is preinstalled and nothing listens
+available via `apt` but none of it is preinstalled and nothing listens
 by default. See [docs/security-tools.md](docs/security-tools.md).
 
 ## First-party experience
 
-Argon isn't a re-skin — it has its own applications:
+Argon isn't a re-skin, it has its own applications:
 
-* **Argon Software** — a graphical app store. Browse curated categories
+* **Argon Software** has a graphical app store. Browse curated categories
   or search, then install/remove with one click and a password prompt.
   No terminal, ever.
-* **Argon Welcome** — a first-login greeter: install the system, get
+* **Argon Welcome** is a first-login greeter: install the system, get
   software, review your privacy defaults, find the docs.
-* **Argon boot menu** — branded GRUB (UEFI) and isolinux (BIOS) menus.
-* **Argon desktop** — a dark Nordic XFCE layout, not stock XFCE.
+* **Argon boot menu** is a branded GRUB (UEFI) and isolinux (BIOS) menus.
+* **Argon desktop** has a dark XFCE layout, not stock XFCE.
 
 More in [docs/applications.md](docs/applications.md).
 
@@ -95,10 +95,10 @@ website/     static project page
 
 ## Principles
 
-1. **Privacy first** — data minimization in every default.
-2. **Security by default** — hardened without user intervention.
-3. **Freedom** — FOSS-first, GPL-3.0, no lock-in.
-4. **Transparency** — public scripts, reproducible builds, signed releases.
+1. **Privacy first**, data minimization in every default.
+2. **Security by default**, hardened without user intervention.
+3. **Freedom**, FOSS-first, GPL-3.0, no lock and key.
+4. **Transparency**, public scripts, reproducible builds, signed releases.
 
 The full product vision lives in the
 [PRD / project documentation](docs/README.md).
