@@ -1,0 +1,38 @@
+#!/bin/sh
+# Argon OS — live session user setup.
+#
+# live-config runs the scripts in this directory during boot of the LIVE
+# image only (an installed system never executes them). By default the
+# autologin live user has no usable password, so the moment the screen
+# locker or any authentication prompt appears there is no way past it —
+# "password incorrect" for everything. Give the live user a known password
+# so the live session is usable end to end.
+#
+# This is the LIVE demo account only. Installed systems create their own
+# user, with the password chosen in the installer, and never touch this.
+#
+# Live credentials:  username = argon   password = argon
+
+set -e
+
+DEFAULT_USER="argon"
+LIVE_PASSWORD="argon"
+
+# Determine the live username: prefer live-config's exported value, then the
+# kernel command line (username=/live-config.username=), then the default.
+_user="${LIVE_USERNAME:-}"
+if [ -z "$_user" ] && [ -r /proc/cmdline ]; then
+    _cmdline="$(cat /proc/cmdline)"
+    for _p in $_cmdline; do
+        case "$_p" in
+            live-config.username=*) _user="${_p#live-config.username=}" ;;
+            username=*)             _user="${_p#username=}" ;;
+        esac
+    done
+fi
+[ -n "$_user" ] || _user="$DEFAULT_USER"
+
+if id "$_user" >/dev/null 2>&1; then
+    echo "${_user}:${LIVE_PASSWORD}" | chpasswd || true
+    echo "argon: live user '${_user}' password set"
+fi

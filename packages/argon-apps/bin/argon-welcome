@@ -76,6 +76,21 @@ class WelcomeWindow(Gtk.ApplicationWindow):
         subtitle.get_style_context().add_class("dim-label")
         content.pack_start(subtitle, False, False, 0)
 
+        # In the live session, make it unmistakable that this is a trial
+        # account and that installing is how you create your own login.
+        if is_live_session():
+            banner = Gtk.InfoBar()
+            banner.set_message_type(Gtk.MessageType.INFO)
+            msg = Gtk.Label()
+            msg.set_line_wrap(True)
+            msg.set_markup(
+                "<b>You're running the live demo.</b>  Sign-in is automatic; "
+                "if you're ever asked, the login is <tt>argon</tt> / "
+                "<tt>argon</tt>.\nClick <b>Install Argon OS</b> below to put it "
+                "on your computer and create your own username and password.")
+            banner.get_content_area().add(msg)
+            content.pack_start(banner, False, False, 0)
+
         grid = Gtk.Grid(column_spacing=12, row_spacing=12,
                         column_homogeneous=True, halign=Gtk.Align.FILL)
 

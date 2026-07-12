@@ -1,0 +1,13 @@
+[Desktop Entry]
+# Argon OS override: do NOT auto-start the screen locker.
+#
+# light-locker automatically locks the screen on idle/suspend/lid-close.
+# On the live session that traps the user behind a password prompt, and on
+# a fresh install it surprises people before they expect it. Manual locking
+# still works (xflock4 / the panel action) for anyone who wants it; this
+# only disables the always-on background locker.
+Type=Application
+Name=Screen Locker (disabled by Argon)
+Exec=true
+Hidden=true
+X-GNOME-Autostart-enabled=false

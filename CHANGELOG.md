@@ -6,6 +6,20 @@ release tags.
 
 ## [Unreleased]
 
+### Fixed
+- Live session lockout: the autologin live user had no usable password, so
+  any authentication prompt (notably the idle screen locker) rejected every
+  password. The live user now has a known password (`argon`/`argon`), the
+  automatic screen locker no longer starts, and the power manager does not
+  lock on suspend — so live users can't get locked out. Installed systems
+  are unaffected (you create your own account in the installer).
+
+### Changed
+- New Argon logo: a bolder arrowhead "A" with a swoosh base, applied across
+  the branding logos, app icon, wallpaper, boot splash and website.
+- Welcome screen now shows a clear live-session banner (credentials + "click
+  Install to create your own account").
+
 ### Added
 - Audio production support: Creative & Audio catalog category (LMMS,
   Ardour, Carla, qpwgraph, EasyEffects, Hydrogen, Wine) and
