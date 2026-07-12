@@ -1,0 +1,86 @@
+Source: argon-meta
+Section: metapackages
+Priority: optional
+Maintainer: The Argon Project <argon@example.org>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/seattlex/argon
+Vcs-Git: https://github.com/seattlex/argon.git
+Vcs-Browser: https://github.com/seattlex/argon
+
+Package: argon-core
+Architecture: all
+Depends: ${misc:Depends},
+ network-manager,
+ apparmor,
+ apparmor-profiles,
+ apparmor-utils,
+ ufw,
+ fail2ban,
+ python3-systemd,
+ unattended-upgrades,
+ apt-listchanges,
+ needrestart,
+ chrony,
+ mat2,
+ cryptsetup,
+ sudo,
+ ca-certificates,
+ gnupg
+Description: Argon OS base system (metapackage)
+ Pulls in the hardening and privacy baseline every Argon system ships
+ with: AppArmor, UFW, fail2ban, unattended security upgrades,
+ NTS-authenticated time sync and metadata cleaning tools.
+
+Package: argon-desktop-xfce
+Architecture: all
+Depends: ${misc:Depends},
+ argon-core,
+ xfce4,
+ xfce4-terminal,
+ xfce4-whiskermenu-plugin,
+ lightdm,
+ lightdm-gtk-greeter,
+ light-locker,
+ thunar-archive-plugin,
+ mousepad,
+ ristretto,
+ firefox-esr,
+ network-manager-gnome,
+ arc-theme,
+ papirus-icon-theme,
+ fonts-noto-core,
+ pipewire,
+ pipewire-pulse,
+ wireplumber,
+ pavucontrol
+Description: Argon OS XFCE desktop (metapackage)
+ The default Argon desktop: XFCE with dark Nordic theming, hardened
+ Firefox ESR and PipeWire audio.
+
+Package: argon-privacy-tools
+Architecture: all
+Depends: ${misc:Depends},
+ tor,
+ torsocks,
+ mat2,
+ wireguard-tools,
+ openvpn
+Recommends: onionshare
+Description: Argon OS privacy tooling (metapackage)
+ Optional privacy tools: Tor with torsocks, metadata cleaning (mat2)
+ and VPN clients (WireGuard, OpenVPN). Tor is installed disabled;
+ enable it with `systemctl enable --now tor`.
+
+Package: argon-dev-tools
+Architecture: all
+Depends: ${misc:Depends},
+ git,
+ build-essential,
+ python3,
+ python3-pip,
+ python3-venv
+Recommends: golang, rustc, cargo, podman, docker.io
+Description: Argon OS development profile (metapackage)
+ Optional developer toolchain: git, C/C++, Python, and (as recommends)
+ Go, Rust and container runtimes.

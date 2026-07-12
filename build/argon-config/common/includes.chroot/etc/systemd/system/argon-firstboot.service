@@ -1,0 +1,16 @@
+[Unit]
+Description=Argon OS first-boot setup (regenerate SSH host keys)
+# Only runs when host keys are missing, i.e. on the first boot of a fresh
+# image or installation. Keys are removed at image build time so no two
+# systems ever share an SSH identity.
+ConditionPathExists=!/etc/ssh/ssh_host_ed25519_key
+Before=ssh.service
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/ssh-keygen -A
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

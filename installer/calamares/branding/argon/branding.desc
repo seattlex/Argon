@@ -1,0 +1,37 @@
+# Argon OS — Calamares branding
+---
+componentName: argon
+
+welcomeStyleCalamares: false
+welcomeExpandingLogo: true
+
+windowExpanding: normal
+windowSize: 900px,600px
+windowPlacement: center
+
+strings:
+    productName:         "Argon OS"
+    shortProductName:    "Argon"
+    version:             "rolling"
+    shortVersion:        "rolling"
+    versionedName:       "Argon OS rolling"
+    shortVersionedName:  "Argon rolling"
+    bootloaderEntryName: "Argon"
+    productUrl:          "https://github.com/seattlex/argon"
+    supportUrl:          "https://github.com/seattlex/argon/discussions"
+    knownIssuesUrl:      "https://github.com/seattlex/argon/issues"
+    releaseNotesUrl:     "https://github.com/seattlex/argon/blob/main/CHANGELOG.md"
+
+images:
+    productLogo:         "logo.png"
+    productIcon:         "logo.png"
+    productWelcome:      "welcome.png"
+
+slideshow:              "show.qml"
+slideshowAPI:           2
+
+style:
+   sidebarBackground:    "#101A2C"
+   sidebarText:          "#ECEFF4"
+   sidebarTextHighlight: "#1B2B47"
+   sidebarTextSelect:    "#88A5C8"

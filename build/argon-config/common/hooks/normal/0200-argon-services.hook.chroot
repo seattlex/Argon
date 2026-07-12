@@ -1,0 +1,67 @@
+#!/bin/sh
+# Argon OS — service policy: hardening services on, listeners off.
+set -e
+
+echo "argon: configuring default services"
+
+# Enable a unit but never abort the build if it is missing: package splits
+# upstream (e.g. systemd-resolved moving out of the systemd package) should
+# be surfaced as a warning, not a hard failure. The packages that provide
+# these units are pinned in the package lists.
+enable_unit() {
+    if systemctl enable "$1" 2>/dev/null; then
+        return 0
+    fi
+    echo "argon: WARNING could not enable $1 (unit not present)" >&2
+}
+
+# --- Enabled by default -------------------------------------------------
+enable_unit apparmor.service
+enable_unit ufw.service
+enable_unit fail2ban.service
+# unattended-upgrades runs off the apt-daily timers (its .service is a
+# shutdown hook with no [Install] section — do not `enable` it directly)
+enable_unit apt-daily.timer
+enable_unit apt-daily-upgrade.timer
+enable_unit chrony.service || enable_unit chronyd.service
+enable_unit systemd-resolved.service
+enable_unit NetworkManager.service
+
+# Activate UFW without needing a running daemon in the chroot:
+# default deny incoming / allow outgoing, IPv6 included.
+if [ -f /etc/ufw/ufw.conf ]; then
+    sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf
+    grep -q '^ENABLED=' /etc/ufw/ufw.conf || echo 'ENABLED=yes' >> /etc/ufw/ufw.conf
+fi
+if [ -f /etc/default/ufw ]; then
+    sed -i 's/^IPV6=.*/IPV6=yes/' /etc/default/ufw
+    sed -i 's/^DEFAULT_INPUT_POLICY=.*/DEFAULT_INPUT_POLICY="DROP"/' /etc/default/ufw
+    sed -i 's/^DEFAULT_OUTPUT_POLICY=.*/DEFAULT_OUTPUT_POLICY="ACCEPT"/' /etc/default/ufw
+fi
+
+# systemd-resolved stub resolver: point /etc/resolv.conf at it so every
+# application resolves through the DNS-over-TLS path.
+ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+
+# --- Installed but OFF by default (opt-in listeners) --------------------
+# No network service may listen out of the box.
+systemctl disable ssh.service 2>/dev/null || true
+systemctl disable tor.service 2>/dev/null || true
+
+# Anything that advertises the machine on the LAN is off by default.
+systemctl disable avahi-daemon.service 2>/dev/null || true
+systemctl disable avahi-daemon.socket 2>/dev/null || true
+systemctl disable cups.service 2>/dev/null || true
+systemctl disable cups-browsed.service 2>/dev/null || true
+systemctl disable bluetooth.service 2>/dev/null || true
+
+# chrony replaces systemd-timesyncd (NTS support)
+systemctl disable systemd-timesyncd.service 2>/dev/null || true
+
+# --- SSH host keys ------------------------------------------------------
+# Never ship pre-generated host keys: every image (and every install made
+# from it) would share the same identity. argon-firstboot.service
+# regenerates them on first boot of an installed system; live-config does
+# the same for live sessions.
+rm -f /etc/ssh/ssh_host_*_key /etc/ssh/ssh_host_*_key.pub
+enable_unit argon-firstboot.service

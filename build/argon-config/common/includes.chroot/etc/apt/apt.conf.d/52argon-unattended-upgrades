@@ -1,0 +1,16 @@
+// Argon OS — unattended-upgrades policy
+//
+// Argon tracks Kali rolling, which ships security fixes through the main
+// archive rather than a separate security suite, so we accept upgrades from
+// the Kali and Argon origins. Reboots are never automatic on a desktop;
+// needrestart notifies the user instead.
+
+Unattended-Upgrade::Origins-Pattern {
+        "o=Kali,n=kali-rolling";
+        "o=Argon,n=argon-rolling";
+};
+
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::SyslogEnable "true";

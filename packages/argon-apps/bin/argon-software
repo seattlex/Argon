@@ -1,0 +1,322 @@
+#!/usr/bin/python3
+# Argon Software — the Argon OS software center.
+#
+# A curated, privacy-respecting app store: no accounts, no ratings servers,
+# no phoning home. The catalog is a local JSON file; installs go through a
+# polkit-authenticated helper so users never need a terminal.
+#
+# Dev/test knobs:
+#   ARGON_CATALOG=<path>          use an alternate catalog file
+#   ARGON_SOFTWARE_SIMULATE=1     pass --simulate to the helper (apt -s)
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+import threading
+
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Gdk, Pango  # noqa: E402
+
+APP_ID = "org.argon.Software"
+CATALOG_PATHS = [
+    os.environ.get("ARGON_CATALOG", ""),
+    "/usr/share/argon/software-catalog.json",
+]
+HELPER = "/usr/libexec/argon/argon-pkg-helper"
+SIMULATE = os.environ.get("ARGON_SOFTWARE_SIMULATE") == "1"
+
+
+def load_catalog():
+    for path in CATALOG_PATHS:
+        if path and os.path.exists(path):
+            with open(path, encoding="utf-8") as f:
+                return json.load(f)
+    raise FileNotFoundError("no software catalog found")
+
+
+def installed_state(packages):
+    """Return {package: bool} for a list of package names."""
+    if not packages:
+        return {}
+    result = {p: False for p in packages}
+    try:
+        out = subprocess.run(
+            ["dpkg-query", "-W", "-f", "${Package} ${db:Status-Status}\n"]
+            + sorted(result),
+            capture_output=True, text=True, check=False,
+        ).stdout
+    except FileNotFoundError:
+        return result
+    for line in out.splitlines():
+        parts = line.split()
+        if len(parts) == 2 and parts[0] in result:
+            result[parts[0]] = parts[1] == "installed"
+    return result
+
+
+def helper_command(action, packages):
+    cmd = []
+    if os.geteuid() != 0:
+        cmd.append("pkexec")
+    cmd.append(os.environ.get("ARGON_PKG_HELPER", HELPER))
+    if SIMULATE:
+        cmd.append("--simulate")
+    cmd.append(action)
+    cmd.extend(packages)
+    return cmd
+
+
+class AppRow(Gtk.ListBoxRow):
+    def __init__(self, app, on_action):
+        super().__init__()
+        self.app = app
+        self.installed = False
+        self.busy = False
+        self._on_action = on_action
+
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        box.set_margin_top(8)
+        box.set_margin_bottom(8)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+
+        icon = Gtk.Image.new_from_icon_name(
+            app.get("icon", "package-x-generic"), Gtk.IconSize.DIALOG)
+        icon.set_pixel_size(48)
+        box.pack_start(icon, False, False, 0)
+
+        text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        name = Gtk.Label(label=app["name"], xalign=0)
+        name.get_style_context().add_class("argon-app-name")
+        summary = Gtk.Label(label=app.get("summary", ""), xalign=0)
+        summary.get_style_context().add_class("dim-label")
+        summary.set_ellipsize(Pango.EllipsizeMode.END)
+        text.pack_start(name, False, False, 0)
+        text.pack_start(summary, False, False, 0)
+        if len(app["packages"]) > 1:
+            detail = Gtk.Label(
+                label="Bundle · {} packages".format(len(app["packages"])),
+                xalign=0)
+            detail.get_style_context().add_class("dim-label")
+            text.pack_start(detail, False, False, 0)
+        box.pack_start(text, True, True, 0)
+
+        self.spinner = Gtk.Spinner()
+        box.pack_start(self.spinner, False, False, 0)
+
+        self.button = Gtk.Button(label="Install")
+        self.button.set_valign(Gtk.Align.CENTER)
+        self.button.set_size_request(96, -1)
+        self.button.connect("clicked", self._clicked)
+        box.pack_start(self.button, False, False, 0)
+
+        self.add(box)
+        self.set_activatable(False)
+
+    def _clicked(self, _btn):
+        self._on_action(self, "remove" if self.installed else "install")
+
+    def set_installed(self, installed):
+        self.installed = installed
+        if installed:
+            self.button.set_label("Remove")
+            self.button.get_style_context().remove_class("suggested-action")
+        else:
+            self.button.set_label("Install")
+            self.button.get_style_context().add_class("suggested-action")
+
+    def set_busy(self, busy):
+        self.busy = busy
+        self.button.set_sensitive(not busy)
+        if busy:
+            self.spinner.start()
+        else:
+            self.spinner.stop()
+
+    def matches(self, needle):
+        hay = " ".join([
+            self.app["name"], self.app.get("summary", ""),
+            " ".join(self.app["packages"]),
+        ]).lower()
+        return needle in hay
+
+
+class SoftwareWindow(Gtk.ApplicationWindow):
+    def __init__(self, app, catalog):
+        super().__init__(application=app, title="Argon Software")
+        self.set_default_size(920, 640)
+        self.catalog = catalog
+        self.rows = []
+        self.op_running = False
+
+        header = Gtk.HeaderBar(show_close_button=True, title="Argon Software")
+        header.set_subtitle("Curated free software for Argon OS")
+        self.search = Gtk.SearchEntry(placeholder_text="Search…")
+        self.search.connect("search-changed", self._on_search)
+        header.pack_end(self.search)
+        self.set_titlebar(header)
+
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        paned = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+
+        self.stack = Gtk.Stack()
+        self.stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
+        sidebar = Gtk.StackSidebar(stack=self.stack)
+        sidebar.set_size_request(190, -1)
+        paned.pack_start(sidebar, False, False, 0)
+        paned.pack_start(
+            Gtk.Separator(orientation=Gtk.Orientation.VERTICAL), False, False, 0)
+        paned.pack_start(self.stack, True, True, 0)
+        outer.pack_start(paned, True, True, 0)
+
+        # Log pane (revealed during install/remove operations)
+        self.revealer = Gtk.Revealer()
+        logbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        logbox.pack_start(Gtk.Separator(), False, False, 0)
+        self.logview = Gtk.TextView(editable=False, monospace=True)
+        self.logview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_size_request(-1, 140)
+        scroll.add(self.logview)
+        logbox.pack_start(scroll, True, True, 0)
+        self.revealer.add(logbox)
+        outer.pack_start(self.revealer, False, False, 0)
+
+        self.add(outer)
+
+        for cat in catalog["categories"]:
+            self.stack.add_titled(
+                self._category_page(cat), cat["id"], cat["name"])
+
+        self._apply_css()
+        self.show_all()
+        threading.Thread(target=self._refresh_states, daemon=True).start()
+
+    def _category_page(self, cat):
+        listbox = Gtk.ListBox()
+        listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        for app_def in cat["apps"]:
+            row = AppRow(app_def, self._start_operation)
+            listbox.add(row)
+            self.rows.append(row)
+        listbox.set_filter_func(self._filter_row)
+        scroll = Gtk.ScrolledWindow()
+        scroll.add(listbox)
+        return scroll
+
+    def _apply_css(self):
+        css = b"""
+        .argon-app-name { font-weight: bold; }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+    # --- search -----------------------------------------------------------
+    def _on_search(self, _entry):
+        for row in self.rows:
+            parent = row.get_parent()
+            if parent is not None:
+                parent.invalidate_filter()
+
+    def _filter_row(self, row):
+        needle = self.search.get_text().strip().lower()
+        return True if not needle else row.matches(needle)
+
+    # --- package state ------------------------------------------------------
+    def _refresh_states(self):
+        all_pkgs = set()
+        for row in self.rows:
+            all_pkgs.update(row.app["packages"])
+        state = installed_state(sorted(all_pkgs))
+        GLib.idle_add(self._apply_states, state)
+
+    def _apply_states(self, state):
+        for row in self.rows:
+            row.set_installed(all(state.get(p) for p in row.app["packages"]))
+        return False
+
+    # --- install / remove -----------------------------------------------------
+    def _start_operation(self, row, action):
+        if self.op_running:
+            return
+        self.op_running = True
+        row.set_busy(True)
+        self.revealer.set_reveal_child(True)
+        self._log_clear()
+        self._log_line("$ {} {}\n".format(action, " ".join(row.app["packages"])))
+        threading.Thread(
+            target=self._run_operation, args=(row, action), daemon=True).start()
+
+    def _run_operation(self, row, action):
+        cmd = helper_command(action, row.app["packages"])
+        try:
+            proc = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                text=True, bufsize=1)
+            for line in proc.stdout:
+                GLib.idle_add(self._log_line, line)
+            code = proc.wait()
+        except OSError as exc:
+            GLib.idle_add(self._log_line, "error: {}\n".format(exc))
+            code = 1
+        GLib.idle_add(self._finish_operation, row, action, code)
+
+    def _finish_operation(self, row, action, code):
+        row.set_busy(False)
+        self.op_running = False
+        if code == 0:
+            self._log_line("\nDone.\n")
+            if not SIMULATE:
+                row.set_installed(action == "install")
+            GLib.timeout_add_seconds(
+                2, lambda: self.revealer.set_reveal_child(False) or False)
+        else:
+            self._log_line("\nOperation failed (exit {}).\n".format(code))
+        return False
+
+    # --- log pane ----------------------------------------------------------
+    def _log_clear(self):
+        self.logview.get_buffer().set_text("")
+
+    def _log_line(self, text):
+        buf = self.logview.get_buffer()
+        buf.insert(buf.get_end_iter(), text)
+        mark = buf.create_mark(None, buf.get_end_iter(), False)
+        self.logview.scroll_mark_onscreen(mark)
+        buf.delete_mark(mark)
+        return False
+
+
+class SoftwareApp(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id=APP_ID)
+
+    def do_activate(self):
+        win = self.get_active_window()
+        if win is None:
+            try:
+                catalog = load_catalog()
+            except (OSError, ValueError) as exc:
+                dialog = Gtk.MessageDialog(
+                    message_type=Gtk.MessageType.ERROR,
+                    buttons=Gtk.ButtonsType.CLOSE,
+                    text="Could not load the software catalog",
+                    secondary_text=str(exc))
+                dialog.run()
+                dialog.destroy()
+                sys.exit(1)
+            win = SoftwareWindow(self, catalog)
+        win.present()
+
+
+if __name__ == "__main__":
+    if shutil.which("dpkg-query") is None:
+        print("argon-software requires a Debian-based system", file=sys.stderr)
+        sys.exit(1)
+    sys.exit(SoftwareApp().run(sys.argv))

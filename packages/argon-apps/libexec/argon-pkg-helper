@@ -1,0 +1,54 @@
+#!/bin/sh
+# Argon OS — privileged package helper for Argon Software.
+#
+# Runs as root via pkexec (see org.argon.pkg-helper polkit action, which
+# requires admin authentication). Deliberately tiny and strict: it accepts
+# exactly one action and a list of syntactically valid Debian package
+# names — nothing else — so the privilege boundary is easy to audit.
+#
+# Usage: argon-pkg-helper [--simulate] {install|remove} pkg [pkg...]
+
+set -eu
+
+SIMULATE=""
+if [ "${1:-}" = "--simulate" ]; then
+    SIMULATE="-s"
+    shift
+fi
+
+ACTION="${1:-}"
+shift || true
+
+case "$ACTION" in
+    install|remove) ;;
+    *)
+        echo "usage: argon-pkg-helper [--simulate] {install|remove} pkg..." >&2
+        exit 2
+        ;;
+esac
+
+[ $# -ge 1 ] || { echo "error: no packages given" >&2; exit 2; }
+
+for pkg in "$@"; do
+    # Debian package name syntax (policy §5.6.1): lowercase alphanumerics
+    # plus + - . , at least 2 chars, starting alphanumeric. Anything else
+    # (options, paths, shell metacharacters) is rejected outright.
+    case "$pkg" in
+        [a-z0-9][a-z0-9+.-]*) ;;
+        *)
+            echo "error: invalid package name: $pkg" >&2
+            exit 2
+            ;;
+    esac
+done
+
+export DEBIAN_FRONTEND=noninteractive
+
+if [ "$ACTION" = "install" ]; then
+    apt-get update -q || true
+    # shellcheck disable=SC2086  # $SIMULATE is intentionally empty or -s
+    exec apt-get install -y -q $SIMULATE --no-install-recommends -- "$@"
+else
+    # shellcheck disable=SC2086
+    exec apt-get remove -y -q $SIMULATE -- "$@"
+fi

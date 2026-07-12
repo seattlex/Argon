@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Argon OS — privacy first, security by default</title>
+<meta name="description" content="Argon OS: a privacy-first, security-hardened Linux distribution built on Kali rolling. No telemetry. Free software.">
+<style>
+  :root{
+    --bg:#0b1220; --bg2:#14213a; --panel:#101a2c; --line:#22304a;
+    --text:#eceff4; --muted:#9aa8bd; --accent:#88a5c8; --accent2:#5e81ac;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);
+    color:var(--text);
+    font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  header{padding:96px 0 64px;text-align:center}
+  .logo{width:96px;height:96px;margin:0 auto 24px;display:block}
+  h1{font-size:3rem;letter-spacing:.02em}
+  .tag{color:var(--accent);font-size:1.25rem;margin-top:8px}
+  .sub{color:var(--muted);max-width:560px;margin:16px auto 0}
+  .cta{margin-top:36px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+  .btn{
+    display:inline-block;padding:12px 28px;border-radius:8px;
+    text-decoration:none;font-weight:600;letter-spacing:.02em;
+  }
+  .btn-primary{background:var(--accent2);color:var(--text)}
+  .btn-primary:hover{background:var(--accent)}
+  .btn-ghost{border:1px solid var(--line);color:var(--accent)}
+  .btn-ghost:hover{border-color:var(--accent)}
+  section{padding:48px 0;border-top:1px solid var(--line)}
+  h2{font-size:1.5rem;margin-bottom:24px;color:var(--accent)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px}
+  .card h3{font-size:1.05rem;margin-bottom:8px}
+  .card p{color:var(--muted);font-size:.95rem}
+  code,pre{font-family:ui-monospace,"Fira Code",monospace;font-size:.9rem}
+  pre{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:16px 20px;overflow-x:auto;color:var(--accent)
+  }
+  footer{padding:48px 0;color:var(--muted);text-align:center;font-size:.9rem}
+  footer a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <svg class="logo" viewBox="0 0 512 512" role="img" aria-label="Argon OS logo">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#1B2B47"/><stop offset="1" stop-color="#101A2C"/>
+      </linearGradient>
+      <linearGradient id="peak" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" stop-color="#5E81AC"/><stop offset="1" stop-color="#88A5C8"/>
+      </linearGradient>
+    </defs>
+    <rect x="16" y="16" width="480" height="480" rx="96" fill="url(#bg)"/>
+    <polygon points="256,96 296,96 176,416 116,416" fill="#ECEFF4"/>
+    <polygon points="256,96 296,96 396,416 336,416" fill="url(#peak)"/>
+    <polygon points="208,300 322,300 340,344 190,344" fill="#4C566A"/>
+    <circle cx="256" cy="96" r="18" fill="#ECEFF4"/>
+  </svg>
+  <h1>Argon OS</h1>
+  <p class="tag">Privacy first. Security by default.</p>
+  <p class="sub">
+    A hardened Linux distribution built on Kali rolling, developed in
+    Norway. Zero telemetry, encrypted DNS, firewall on, full-disk
+    encryption in the installer — before your first login.
+  </p>
+  <div class="cta">
+    <a class="btn btn-primary" href="https://github.com/seattlex/argon/releases">Download</a>
+    <a class="btn btn-ghost" href="https://github.com/seattlex/argon">Source code</a>
+  </div>
+</header>
+
+<section>
+  <h2>Defaults that respect you</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Nothing phones home</h3>
+      <p>No telemetry, no analytics, no crash reporting. The OS transmits
+      nothing about you — verifiable, because every build script is public.</p>
+    </div>
+    <div class="card">
+      <h3>Encrypted DNS</h3>
+      <p>DNS-over-TLS to privacy-respecting resolvers system-wide, DNSSEC,
+      and no chatty LAN protocols announcing your machine.</p>
+    </div>
+    <div class="card">
+      <h3>Untrackable Wi-Fi</h3>
+      <p>Randomized MAC addresses while scanning, per-network identities
+      when connected, and your hostname is never sent to DHCP.</p>
+    </div>
+    <div class="card">
+      <h3>Hardened out of the box</h3>
+      <p>Firewall denying inbound, AppArmor enforced, hardened kernel
+      settings, fail2ban, and zero services listening by default.</p>
+    </div>
+    <div class="card">
+      <h3>Always patched</h3>
+      <p>Security updates apply automatically and reboots are never forced.
+      Rolling release: current software, continuously.</p>
+    </div>
+    <div class="card">
+      <h3>Full-disk encryption</h3>
+      <p>The guided installer defaults to LUKS2 encryption with Btrfs —
+      one passphrase and everything on disk is protected.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Built in the open</h2>
+  <p style="color:var(--muted);margin-bottom:16px">
+    Every file on an Argon image traces back to a public repository.
+    Build it yourself on Kali rolling:
+  </p>
+  <pre>sudo apt install live-build git
+git clone https://github.com/seattlex/argon
+sudo ./argon/scripts/build-iso.sh --variant xfce</pre>
+</section>
+
+<section>
+  <h2>The Kali ecosystem, on your terms</h2>
+  <p style="color:var(--muted)">
+    Argon tracks Kali rolling, so the full Kali package archive is
+    available through <code>apt</code> — but none of it is preinstalled,
+    and installing a package never opens a port. Your system stays
+    minimal until <em>you</em> decide otherwise.
+  </p>
+</section>
+
+<footer>
+  <p>Argon OS · free software under GPL-3.0-or-later ·
+  named for the noble gas: stable, non-reactive, invisible.</p>
+  <p style="margin-top:8px">
+    <a href="https://github.com/seattlex/argon">GitHub</a> ·
+    <a href="https://github.com/seattlex/argon/tree/main/docs">Documentation</a> ·
+    <a href="https://github.com/seattlex/argon/blob/main/SECURITY.md">Security policy</a>
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,50 @@
+#!/bin/sh
+# Argon OS — live-build configuration
+#
+# This script is invoked by `lb config` (via the auto/ mechanism) and must be
+# run from the build/ directory on a Kali rolling system (or container) with
+# Kali's live-build installed, since Kali patches live-build to understand
+# the kali-rolling distribution.
+#
+# Environment knobs:
+#   ARGON_VARIANT   desktop variant to build (default: xfce)
+#   ARGON_MIRROR    Kali mirror to build against (default: http://http.kali.org/kali)
+#   ARGON_VERSION   version string embedded in the image name (default: rolling)
+
+set -e
+
+ARGON_VARIANT="${ARGON_VARIANT:-xfce}"
+ARGON_MIRROR="${ARGON_MIRROR:-http://http.kali.org/kali}"
+ARGON_VERSION="${ARGON_VERSION:-rolling}"
+
+# Reproducibility: pin all timestamps inside the image to the last commit date
+# when building from git, unless the caller already set SOURCE_DATE_EPOCH.
+if [ -z "${SOURCE_DATE_EPOCH:-}" ] && command -v git >/dev/null 2>&1 \
+    && git rev-parse --git-dir >/dev/null 2>&1; then
+    SOURCE_DATE_EPOCH="$(git log -1 --format=%ct 2>/dev/null || date +%s)"
+    export SOURCE_DATE_EPOCH
+fi
+
+lb config noauto \
+    --distribution kali-rolling \
+    --debian-installer none \
+    --archive-areas "main contrib non-free non-free-firmware" \
+    --mirror-bootstrap "$ARGON_MIRROR" \
+    --mirror-binary "$ARGON_MIRROR" \
+    --mirror-chroot "$ARGON_MIRROR" \
+    --keyring-packages kali-archive-keyring \
+    --security false \
+    --updates false \
+    --backports false \
+    --apt-recommends false \
+    --binary-images iso-hybrid \
+    --bootloaders "grub-efi syslinux" \
+    --iso-application "Argon OS" \
+    --iso-publisher "The Argon Project; https://github.com/seattlex/argon" \
+    --iso-volume "Argon $ARGON_VERSION" \
+    --image-name "argon-$ARGON_VERSION-$ARGON_VARIANT" \
+    --linux-flavours "$(dpkg --print-architecture | sed 's/^i386$/686-pae/;s/^arm64$/arm64/;s/^amd64$/amd64/')" \
+    --bootappend-live "boot=live components quiet splash username=argon hostname=argon apparmor=1 security=apparmor" \
+    --memtest none \
+    --zsync false \
+    "$@"

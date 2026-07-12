@@ -1,0 +1,117 @@
+name: Build ISO
+
+on:
+  # Manual, on-demand builds from the Actions tab (available once this
+  # workflow is on the default branch).
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: "Desktop variant"
+        default: "xfce"
+        required: true
+  # Release builds: pushing a version tag produces a signed GitHub Release.
+  push:
+    tags:
+      - "v*"
+  # Weekly rolling snapshot, Monday 03:00 UTC.
+  schedule:
+    - cron: "0 3 * * 1"
+
+# NOTE: the ISO build deliberately does NOT run on every push/PR — a full
+# build is ~15 minutes and downloads ~2 GB, so running it per-commit is
+# wasteful and noisy. Fast checks (shellcheck, config assembly) live in the
+# separate Lint workflow, which does run on PRs. To produce an ISO, use the
+# "Run workflow" button (after merge to main), push a v* tag, or wait for
+# the weekly schedule.
+
+permissions:
+  contents: write
+
+# One build per branch/PR; a new push cancels the previous run.
+concurrency:
+  group: build-iso-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # live-build needs to create chroots and mount pseudo-filesystems
+    container:
+      image: kalilinux/kali-rolling
+      options: --privileged
+    steps:
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            live-build git ca-certificates xz-utils \
+            build-essential debhelper librsvg2-bin
+
+      - uses: actions/checkout@v4
+
+      - name: Determine version string
+        id: version
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=rolling-$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build ISO
+        run: |
+          ./scripts/build-iso.sh \
+            --variant "${{ github.event.inputs.variant || 'xfce' }}" \
+            --version "${{ steps.version.outputs.version }}"
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build/build.log
+          if-no-files-found: ignore
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: argon-${{ steps.version.outputs.version }}
+          path: |
+            iso/*.iso
+            iso/*.sha256
+          compression-level: 0
+          retention-days: 7
+
+      - name: Import release signing key
+        if: github.ref_type == 'tag' && vars.HAS_SIGNING_KEY == 'true'
+        env:
+          SIGNING_KEY: ${{ secrets.ARGON_SIGNING_KEY_ASC }}
+        run: |
+          apt-get install -y --no-install-recommends gnupg
+          printf '%s' "$SIGNING_KEY" | gpg --batch --import
+
+      - name: Sign release artifacts
+        if: github.ref_type == 'tag' && vars.HAS_SIGNING_KEY == 'true'
+        run: |
+          for iso in iso/*.iso; do
+            ./scripts/sign-release.sh "$iso"
+          done
+
+      - name: Create GitHub release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: |
+            iso/*.iso
+            iso/*.sha256
+            iso/*.sig
+          body: |
+            Argon OS ${{ steps.version.outputs.version }}
+
+            Verify your download:
+            ```
+            sha256sum -c argon-*.sha256
+            gpg --verify argon-*.sha256.sig argon-*.sha256
+            ```

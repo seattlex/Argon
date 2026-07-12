@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "id": "featured",
+      "name": "Featured",
+      "icon": "starred",
+      "apps": [
+        { "id": "keepassxc", "name": "KeePassXC", "summary": "Offline password manager — your passwords never leave the machine", "icon": "keepassxc", "packages": ["keepassxc"] },
+        { "id": "vlc", "name": "VLC", "summary": "Plays every video and audio format", "icon": "vlc", "packages": ["vlc"] },
+        { "id": "gimp", "name": "GIMP", "summary": "Full-featured image editor", "icon": "gimp", "packages": ["gimp"] },
+        { "id": "libreoffice", "name": "LibreOffice", "summary": "Complete office suite: documents, spreadsheets, presentations", "icon": "libreoffice-startcenter", "packages": ["libreoffice"] },
+        { "id": "syncthing", "name": "Syncthing", "summary": "Sync files between your devices — no cloud in the middle", "icon": "syncthing", "packages": ["syncthing"] },
+        { "id": "thunderbird", "name": "Thunderbird", "summary": "Email, calendar and contacts with OpenPGP built in", "icon": "thunderbird", "packages": ["thunderbird"] }
+      ]
+    },
+    {
+      "id": "internet",
+      "name": "Internet",
+      "icon": "applications-internet",
+      "apps": [
+        { "id": "thunderbird2", "name": "Thunderbird", "summary": "Email, calendar and contacts with OpenPGP built in", "icon": "thunderbird", "packages": ["thunderbird"] },
+        { "id": "chromium", "name": "Chromium", "summary": "The open-source browser behind Chrome (second browser)", "icon": "chromium", "packages": ["chromium"] },
+        { "id": "qbittorrent", "name": "qBittorrent", "summary": "Clean, ad-free BitTorrent client", "icon": "qbittorrent", "packages": ["qbittorrent"] },
+        { "id": "filezilla", "name": "FileZilla", "summary": "Graphical FTP/SFTP file transfer", "icon": "filezilla", "packages": ["filezilla"] },
+        { "id": "remmina", "name": "Remmina", "summary": "Remote desktop client (RDP, VNC, SSH)", "icon": "remmina", "packages": ["remmina"] }
+      ]
+    },
+    {
+      "id": "privacy",
+      "name": "Privacy & Security",
+      "icon": "security-high",
+      "apps": [
+        { "id": "keepassxc2", "name": "KeePassXC", "summary": "Offline password manager with browser integration", "icon": "keepassxc", "packages": ["keepassxc"] },
+        { "id": "torbrowser", "name": "Tor Browser Launcher", "summary": "Downloads and keeps the official Tor Browser up to date", "icon": "torbrowser", "packages": ["torbrowser-launcher"] },
+        { "id": "onionshare", "name": "OnionShare", "summary": "Share files anonymously over the Tor network", "icon": "onionshare", "packages": ["onionshare"] },
+        { "id": "syncthing2", "name": "Syncthing", "summary": "Private, serverless file synchronisation", "icon": "syncthing", "packages": ["syncthing"] },
+        { "id": "gufw", "name": "Firewall (Gufw)", "summary": "Point-and-click front-end for the built-in UFW firewall", "icon": "gufw", "packages": ["gufw"] },
+        { "id": "bleachbit", "name": "BleachBit", "summary": "Free disk space and shred traces of activity", "icon": "bleachbit", "packages": ["bleachbit"] },
+        { "id": "wireshark", "name": "Wireshark", "summary": "Inspect what's really happening on your network", "icon": "org.wireshark.Wireshark", "packages": ["wireshark"] },
+        { "id": "privacy-suite", "name": "Privacy Suite", "summary": "Tor, torsocks, OnionShare and WireGuard in one go", "icon": "security-high", "packages": ["tor", "torsocks", "onionshare", "wireguard-tools"] }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security & Analysis",
+      "icon": "utilities-system-monitor",
+      "apps": [
+        { "id": "wireshark2", "name": "Wireshark", "summary": "Inspect and analyse network traffic packet by packet", "icon": "org.wireshark.Wireshark", "packages": ["wireshark"] },
+        { "id": "nmap", "name": "Nmap", "summary": "Discover devices and open ports on networks you administer", "icon": "nmap", "packages": ["nmap"] },
+        { "id": "lynis", "name": "Lynis", "summary": "Audit your own system's security configuration", "icon": "utilities-terminal", "packages": ["lynis"] },
+        { "id": "rkhunter", "name": "Rootkit Hunter", "summary": "Scan the system for rootkits and known backdoors", "icon": "security-high", "packages": ["rkhunter"] },
+        { "id": "clamtk", "name": "ClamTk", "summary": "Graphical virus scanner (ClamAV)", "icon": "clamtk", "packages": ["clamtk"] },
+        { "id": "gtkhash", "name": "GtkHash", "summary": "Verify file checksums and hashes", "icon": "gtkhash", "packages": ["gtkhash"] },
+        { "id": "testdisk", "name": "TestDisk & PhotoRec", "summary": "Recover lost partitions and deleted files (forensics)", "icon": "drive-harddisk", "packages": ["testdisk"] },
+        { "id": "wipe", "name": "Nwipe", "summary": "Securely erase drives before disposal", "icon": "drive-harddisk", "packages": ["nwipe"] }
+      ]
+    },
+    {
+      "id": "development",
+      "name": "Development",
+      "icon": "applications-development",
+      "apps": [
+        { "id": "geany", "name": "Geany", "summary": "Fast, lightweight code editor and mini-IDE", "icon": "geany", "packages": ["geany"] },
+        { "id": "meld", "name": "Meld", "summary": "Visual diff and merge for files and folders", "icon": "org.gnome.Meld", "packages": ["meld"] },
+        { "id": "gitg", "name": "gitg", "summary": "Browse git history graphically", "icon": "org.gnome.gitg", "packages": ["gitg"] },
+        { "id": "sqlitebrowser", "name": "DB Browser for SQLite", "summary": "Create and edit SQLite databases visually", "icon": "sqlitebrowser", "packages": ["sqlitebrowser"] },
+        { "id": "zeal", "name": "Zeal", "summary": "Offline documentation browser for 200+ APIs", "icon": "zeal", "packages": ["zeal"] },
+        { "id": "dev-toolchain", "name": "Developer Toolchain", "summary": "git, C/C++, Python, Go and Rust compilers", "icon": "applications-development", "packages": ["git", "build-essential", "python3", "python3-pip", "python3-venv", "golang", "rustc", "cargo"] },
+        { "id": "containers", "name": "Container Tools", "summary": "Podman: run containers without a root daemon", "icon": "utilities-terminal", "packages": ["podman", "podman-compose"] }
+      ]
+    },
+    {
+      "id": "multimedia",
+      "name": "Multimedia",
+      "icon": "applications-multimedia",
+      "apps": [
+        { "id": "vlc2", "name": "VLC", "summary": "Plays every video and audio format", "icon": "vlc", "packages": ["vlc"] },
+        { "id": "mpv", "name": "mpv", "summary": "Minimal, high-quality video player", "icon": "mpv", "packages": ["mpv"] },
+        { "id": "gimp2", "name": "GIMP", "summary": "Full-featured image editor", "icon": "gimp", "packages": ["gimp"] },
+        { "id": "inkscape", "name": "Inkscape", "summary": "Professional vector graphics editor", "icon": "org.inkscape.Inkscape", "packages": ["inkscape"] },
+        { "id": "audacity", "name": "Audacity", "summary": "Record and edit audio", "icon": "audacity", "packages": ["audacity"] },
+        { "id": "obs", "name": "OBS Studio", "summary": "Screen recording and live streaming", "icon": "com.obsproject.Studio", "packages": ["obs-studio"] },
+        { "id": "kdenlive", "name": "Kdenlive", "summary": "Non-linear video editor", "icon": "kdenlive", "packages": ["kdenlive"] },
+        { "id": "blender", "name": "Blender", "summary": "3D modelling, animation and rendering", "icon": "blender", "packages": ["blender"] }
+      ]
+    },
+    {
+      "id": "creative",
+      "name": "Creative & Audio",
+      "icon": "applications-multimedia",
+      "apps": [
+        { "id": "music-studio", "name": "Music Studio", "summary": "One-click studio: LMMS, Carla plugin host, EasyEffects and the audio patchbay", "icon": "lmms", "packages": ["lmms", "carla", "qpwgraph", "easyeffects"] },
+        { "id": "lmms", "name": "LMMS", "summary": "Beat/pattern-based music production — the closest free tool to FL Studio", "icon": "lmms", "packages": ["lmms"] },
+        { "id": "ardour", "name": "Ardour", "summary": "Professional multitrack recording, editing and mixing DAW", "icon": "ardour", "packages": ["ardour"] },
+        { "id": "carla", "name": "Carla", "summary": "Audio plugin host — load VST2/VST3/LV2/CLAP plugins and bridge Windows VSTs", "icon": "carla", "packages": ["carla"] },
+        { "id": "qpwgraph", "name": "qpwgraph", "summary": "Visual audio routing (patchbay) — the PipeWire answer to Voicemeeter", "icon": "org.rncbc.qpwgraph", "packages": ["qpwgraph"] },
+        { "id": "easyeffects", "name": "EasyEffects", "summary": "System-wide EQ, compressor and effects for inputs and outputs", "icon": "com.github.wwmm.easyeffects", "packages": ["easyeffects"] },
+        { "id": "hydrogen", "name": "Hydrogen", "summary": "Pattern-based drum machine and sequencer", "icon": "hydrogen", "packages": ["hydrogen"] },
+        { "id": "wine-audio", "name": "Wine (run Windows apps)", "summary": "Compatibility layer for running Windows software such as FL Studio", "icon": "wine", "packages": ["wine", "winetricks"] }
+      ]
+    },
+    {
+      "id": "office",
+      "name": "Office & Graphics",
+      "icon": "applications-office",
+      "apps": [
+        { "id": "libreoffice2", "name": "LibreOffice", "summary": "Complete office suite: documents, spreadsheets, presentations", "icon": "libreoffice-startcenter", "packages": ["libreoffice"] },
+        { "id": "okular", "name": "Okular", "summary": "PDF reader with annotations and form filling", "icon": "okular", "packages": ["okular"] },
+        { "id": "xournalpp", "name": "Xournal++", "summary": "Handwritten notes and PDF annotation", "icon": "com.github.xournalpp.xournalpp", "packages": ["xournalpp"] },
+        { "id": "calibre", "name": "Calibre", "summary": "E-book library management and conversion", "icon": "calibre-gui", "packages": ["calibre"] }
+      ]
+    },
+    {
+      "id": "system",
+      "name": "System Tools",
+      "icon": "applications-system",
+      "apps": [
+        { "id": "gnome-disks", "name": "Disks", "summary": "Manage drives, partitions and disk images", "icon": "org.gnome.DiskUtility", "packages": ["gnome-disk-utility"] },
+        { "id": "timeshift", "name": "Timeshift", "summary": "System snapshots — undo a broken update", "icon": "timeshift", "packages": ["timeshift"] },
+        { "id": "flatpak", "name": "Flatpak", "summary": "Run sandboxed apps from Flathub alongside system packages", "icon": "system-software-install", "packages": ["flatpak"] },
+        { "id": "virt-manager", "name": "Virtual Machine Manager", "summary": "Create and run virtual machines (KVM)", "icon": "virt-manager", "packages": ["virt-manager"] }
+      ]
+    }
+  ]
+}

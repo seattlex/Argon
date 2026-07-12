@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Welcome to Argon
+Comment=Get started with Argon OS
+Exec=argon-welcome
+Icon=argon
+Terminal=false
+Categories=System;GTK;
+Keywords=welcome;start;setup;introduction;
+StartupNotify=true

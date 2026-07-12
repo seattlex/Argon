@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Welcome to Argon
+Comment=Get started with Argon OS
+Exec=argon-welcome --autostart
+Icon=argon
+Terminal=false
+Categories=System;GTK;
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-Delay=3

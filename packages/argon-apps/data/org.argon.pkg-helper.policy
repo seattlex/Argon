@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+<policyconfig>
+  <vendor>Argon OS</vendor>
+  <vendor_url>https://github.com/seattlex/argon</vendor_url>
+
+  <action id="org.argon.pkg-helper">
+    <description>Install or remove software</description>
+    <message>Authentication is required to install or remove software</message>
+    <icon_name>system-software-install</icon_name>
+    <defaults>
+      <!-- Always require an administrator password; keep it for the
+           session so installing several apps in a row isn't painful. -->
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/libexec/argon/argon-pkg-helper</annotate>
+  </action>
+</policyconfig>

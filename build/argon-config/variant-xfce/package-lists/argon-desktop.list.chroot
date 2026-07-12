@@ -1,0 +1,60 @@
+# Argon OS — XFCE desktop variant
+# Recommends are globally disabled (--apt-recommends false), so everything
+# the desktop needs must be listed explicitly.
+
+## Display server & session
+xorg
+xserver-xorg-input-libinput
+xserver-xorg-video-all
+lightdm
+lightdm-gtk-greeter
+light-locker
+dbus-x11
+polkitd
+pkexec
+mate-polkit
+
+## XFCE core
+xfce4
+xfce4-terminal
+xfce4-power-manager
+xfce4-notifyd
+xfce4-screenshooter
+xfce4-taskmanager
+xfce4-whiskermenu-plugin
+xfce4-pulseaudio-plugin
+thunar
+thunar-archive-plugin
+mousepad
+ristretto
+xarchiver
+
+## Theming (dark, minimal, Nordic)
+arc-theme
+papirus-icon-theme
+fonts-noto-core
+fonts-noto-mono
+fonts-firacode
+librsvg2-bin
+
+## Applications
+firefox-esr
+network-manager-gnome
+pavucontrol
+pipewire
+pipewire-pulse
+wireplumber
+gvfs
+gvfs-backends
+xdg-user-dirs
+xdg-utils
+
+## fail2ban systemd backend (recommends are off)
+python3-systemd
+
+## Runtime for Argon's own apps (argon-apps.deb via packages.chroot)
+python3-gi
+gir1.2-gtk-3.0
+
+## Installer (live session only)
+calamares

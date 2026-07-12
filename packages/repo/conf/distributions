@@ -1,0 +1,19 @@
+# Argon OS — reprepro repository definition
+#
+# The Argon APT repository carries Argon's own packages (metapackages,
+# branding, config packages); everything else comes from the Kali mirrors.
+# Manage with scripts/manage-repo.sh.
+#
+# SignWith requires the Argon archive signing key in the keyring of the
+# user running reprepro. Replace "default" with the key fingerprint for
+# production use.
+
+Origin: Argon
+Label: Argon
+Suite: argon-rolling
+Codename: argon-rolling
+Version: rolling
+Architectures: amd64 arm64 source
+Components: main
+Description: Argon OS package repository
+SignWith: default

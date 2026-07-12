@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Argon
+Description=Argon OS boot splash — minimal Nordic dark theme
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/argon
+ScriptFile=/usr/share/plymouth/themes/argon/argon.script
