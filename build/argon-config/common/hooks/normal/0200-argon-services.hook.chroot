@@ -27,6 +27,11 @@ enable_unit chrony.service || enable_unit chronyd.service
 enable_unit systemd-resolved.service
 enable_unit NetworkManager.service
 
+# Performance (faster/lighter): compressed RAM swap and OOM protection so
+# low-memory machines stay responsive instead of freezing.
+enable_unit zramswap.service
+enable_unit earlyoom.service
+
 # Activate UFW without needing a running daemon in the chroot:
 # default deny incoming / allow outgoing, IPv6 included.
 if [ -f /etc/ufw/ufw.conf ]; then
@@ -54,6 +59,12 @@ systemctl disable avahi-daemon.socket 2>/dev/null || true
 systemctl disable cups.service 2>/dev/null || true
 systemctl disable cups-browsed.service 2>/dev/null || true
 systemctl disable bluetooth.service 2>/dev/null || true
+
+# Faster boot: NetworkManager-wait-online blocks boot until the network is
+# up (often many seconds) but nothing on a desktop needs to wait for it.
+# ModemManager probes serial devices at boot and is rarely needed.
+systemctl disable NetworkManager-wait-online.service 2>/dev/null || true
+systemctl disable ModemManager.service 2>/dev/null || true
 
 # chrony replaces systemd-timesyncd (NTS support)
 systemctl disable systemd-timesyncd.service 2>/dev/null || true

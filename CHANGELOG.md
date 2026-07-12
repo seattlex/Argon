@@ -7,12 +7,28 @@ release tags.
 ## [Unreleased]
 
 ### Fixed
-- Live session lockout: the autologin live user had no usable password, so
-  any authentication prompt (notably the idle screen locker) rejected every
-  password. The live user now has a known password (`argon`/`argon`), the
-  automatic screen locker no longer starts, and the power manager does not
-  lock on suspend — so live users can't get locked out. Installed systems
-  are unaffected (you create your own account in the installer).
+- Live session lockout (hardened): the autologin live user had no usable
+  password, so any authentication prompt (notably the idle screen locker)
+  rejected every password. Now three independent safeguards apply — the
+  live user gets a known password (`argon`/`argon`) via a sourced-safe
+  live-config component, and BOTH possible screen lockers (light-locker and
+  xfce4-screensaver) plus lock-on-suspend are disabled — so live users
+  cannot get locked out regardless of which locker is present. Installed
+  systems are unaffected (you create your own account in the installer).
+
+### Added — quality of life
+- Media & codecs: FFmpeg + GStreamer good/bad/ugly/libav/VAAPI so common
+  audio/video plays out of the box, file-manager thumbnails (tumbler,
+  ffmpegthumbnailer), the Parole video player, and emoji/Liberation/DejaVu
+  fonts.
+- Desktop polish: clipboard-history manager (clipman) and a night-light /
+  blue-light filter (redshift, manual location for privacy — no network
+  geolocation).
+- Faster & lighter: zram compressed-RAM swap and earlyoom OOM protection
+  for low-memory machines; NetworkManager-wait-online and ModemManager
+  disabled and the boot-menu timeout cut to 5 s for a quicker boot.
+- More default apps: calculator (galculator), disk-usage viewer (baobab)
+  and PDF reader (atril).
 
 ### Changed
 - Official Argon artwork: the real logo (arrowhead "A" with a swoosh base),

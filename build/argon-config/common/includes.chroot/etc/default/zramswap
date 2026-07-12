@@ -1,0 +1,12 @@
+# Argon OS — compressed RAM swap (zram-tools).
+# A zstd-compressed swap device in RAM: makes low-memory machines far more
+# responsive under pressure than disk swap, with negligible cost otherwise.
+
+# Compression algorithm
+ALGO=zstd
+
+# Size of the zram swap as a percentage of total RAM
+PERCENT=50
+
+# Swap priority (higher than any disk swap so zram is used first)
+PRIORITY=100

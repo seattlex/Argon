@@ -56,5 +56,33 @@ python3-systemd
 python3-gi
 gir1.2-gtk-3.0
 
+## Media & codecs — play common audio/video out of the box + thumbnails
+ffmpeg
+gstreamer1.0-plugins-good
+gstreamer1.0-plugins-bad
+gstreamer1.0-plugins-ugly
+gstreamer1.0-libav
+gstreamer1.0-vaapi
+tumbler
+tumbler-plugins-extra
+ffmpegthumbnailer
+parole
+fonts-noto-color-emoji
+fonts-liberation2
+fonts-dejavu
+
+## Desktop polish — clipboard manager, night-light filter
+xfce4-clipman-plugin
+redshift-gtk
+
+## Faster & lighter — compressed RAM swap + OOM protection on low-memory boxes
+zram-tools
+earlyoom
+
+## More default apps — calculator, disk usage, PDF viewer
+galculator
+baobab
+atril
+
 ## Installer (live session only)
 calamares

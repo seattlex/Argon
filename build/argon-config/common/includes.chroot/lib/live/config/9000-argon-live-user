@@ -3,17 +3,19 @@
 #
 # live-config runs the scripts in this directory during boot of the LIVE
 # image only (an installed system never executes them). By default the
-# autologin live user has no usable password, so the moment the screen
-# locker or any authentication prompt appears there is no way past it —
-# "password incorrect" for everything. Give the live user a known password
-# so the live session is usable end to end.
+# autologin live user has no usable password, so the moment any
+# authentication prompt appears there is no way past it — "password
+# incorrect" for everything. Give the live user a known password so the
+# live session is usable end to end.
 #
 # This is the LIVE demo account only. Installed systems create their own
 # user, with the password chosen in the installer, and never touch this.
 #
 # Live credentials:  username = argon   password = argon
-
-set -e
+#
+# NOTE: deliberately no `set -e`. live-config may *source* these components,
+# and a stray non-zero exit would then abort the rest of live-config's boot
+# setup. Every step below is guarded instead.
 
 DEFAULT_USER="argon"
 LIVE_PASSWORD="argon"
@@ -22,7 +24,7 @@ LIVE_PASSWORD="argon"
 # kernel command line (username=/live-config.username=), then the default.
 _user="${LIVE_USERNAME:-}"
 if [ -z "$_user" ] && [ -r /proc/cmdline ]; then
-    _cmdline="$(cat /proc/cmdline)"
+    _cmdline="$(cat /proc/cmdline 2>/dev/null)"
     for _p in $_cmdline; do
         case "$_p" in
             live-config.username=*) _user="${_p#live-config.username=}" ;;
@@ -32,7 +34,17 @@ if [ -z "$_user" ] && [ -r /proc/cmdline ]; then
 fi
 [ -n "$_user" ] || _user="$DEFAULT_USER"
 
-if id "$_user" >/dev/null 2>&1; then
-    echo "${_user}:${LIVE_PASSWORD}" | chpasswd || true
-    echo "argon: live user '${_user}' password set"
-fi
+# Set the password if the user exists (this component sorts after
+# user-setup, which creates it). Try the resolved user and, as a fallback,
+# the default name, so a mismatch can't leave the account passwordless.
+for _u in "$_user" "$DEFAULT_USER"; do
+    if id "$_u" >/dev/null 2>&1; then
+        if echo "${_u}:${LIVE_PASSWORD}" | chpasswd 2>/dev/null; then
+            echo "argon: live user '${_u}' password set"
+            break
+        fi
+    fi
+done
+
+: # always succeed
+
