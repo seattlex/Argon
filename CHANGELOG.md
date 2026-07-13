@@ -8,14 +8,17 @@ release tags.
 
 ### Fixed
 - Live session now autologs in (root cause of the "password incorrect"
-  reports): the live image was landing on the LightDM login screen instead
-  of booting straight to the desktop, and the live user's password was not
-  something a user would know. The live-config component now explicitly
-  configures LightDM autologin (adds the user to the autologin/nopasswdlogin
-  groups and writes a live-only autologin drop-in), so the live session
-  boots directly to the desktop like Kali/Mint. As fallbacks, the live user
-  still gets a known password (`argon`/`argon`) and, if the greeter ever
-  appears, the user is shown (not hidden) so it is one click. Installed
+  reports): the live image was landing on the LightDM login screen, and the
+  real live account was not necessarily named `argon` — live-config could
+  create it as `user`, so the password and autologin (which targeted a
+  hard-coded `argon`) applied to a user that did not exist. The live-config
+  component now **detects the actual live account by UID** (the first
+  regular user, whatever its name), and sets its password, autologin groups,
+  and a live-only LightDM autologin drop-in against that real user — so the
+  session boots straight to the desktop like Kali/Mint regardless of the
+  username. The boot options also now pass `live-config.username=argon` so
+  the account is named `argon`. Fallbacks: known password (`argon`) and the
+  greeter shows the user (not hidden) if autologin ever fails. Installed
   systems are unaffected — they require login and create their own account.
 - Live desktop now has an "Install Argon OS" launcher (on the desktop and
   in the menu, live session only) that starts the Calamares installer.

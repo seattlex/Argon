@@ -13,70 +13,84 @@
 #      straight to the desktop like Kali/Mint — no login screen.
 #   3. Put an "Install Argon OS" launcher on the desktop (and in the menu).
 #
-# Live credentials (only needed if autologin ever fails): argon / argon.
+# IMPORTANT: we do NOT trust a hard-coded "argon" username. live-config may
+# create the live user under a different name (e.g. "user") if the kernel
+# cmdline username is not honoured, which previously left the real account
+# with no password and autologin pointing at a user that did not exist.
+# Instead we detect the ACTUAL live account: the first regular user
+# (UID >= 1000) that live-config created. Whatever it is named, we fix it.
+#
+# Live credentials (only needed if autologin ever fails): <that user> / argon
 # Installed systems create their own user in the installer and require login.
 #
 # Deliberately no `set -e`: the script is sourced, and a stray non-zero
 # exit would abort the rest of live-config. Every step is guarded instead.
 
-DEFAULT_USER="argon"
-LIVE_PASSWORD="argon"
+configure_live_session() {
+    _password="argon"
 
-# --- resolve the live username ------------------------------------------
-_user="${LIVE_USERNAME:-}"
-if [ -z "$_user" ] && [ -r /proc/cmdline ]; then
-    _cmdline="$(cat /proc/cmdline 2>/dev/null)"
-    for _p in $_cmdline; do
-        case "$_p" in
-            live-config.username=*) _user="${_p#live-config.username=}" ;;
-            username=*)             _user="${_p#username=}" ;;
-        esac
-    done
-fi
-[ -n "$_user" ] || _user="$DEFAULT_USER"
-# Fall back to the default if the resolved user does not actually exist.
-id "$_user" >/dev/null 2>&1 || _user="$DEFAULT_USER"
-
-# --- 1. known password (greeter fallback) -------------------------------
-if id "$_user" >/dev/null 2>&1; then
-    echo "${_user}:${LIVE_PASSWORD}" | chpasswd 2>/dev/null \
-        && echo "argon: live user '${_user}' password set"
-fi
-
-# --- 2. autologin -------------------------------------------------------
-# Groups some PAM autologin configs require; harmless if already present.
-for _g in autologin nopasswdlogin; do
-    getent group "$_g" >/dev/null 2>&1 || groupadd "$_g" 2>/dev/null || true
-done
-usermod -aG autologin,nopasswdlogin "$_user" 2>/dev/null || true
-
-# Pick an X session for autologin (prefer XFCE, else the first available).
-_session=""
-for _s in /usr/share/xsessions/xfce.desktop /usr/share/xsessions/*.desktop; do
-    if [ -f "$_s" ]; then
-        _session="$(basename "$_s" .desktop)"
-        break
+    # --- resolve the ACTUAL live user -----------------------------------
+    # Primary: the first real account live-config created (UID 1000..59999).
+    _user="$(awk -F: '$3 >= 1000 && $3 < 60000 { print $1; exit }' /etc/passwd 2>/dev/null)"
+    # Fallbacks, in case detection comes up empty.
+    [ -n "$_user" ] || _user="${LIVE_USERNAME:-}"
+    if [ -z "$_user" ] && [ -r /proc/cmdline ]; then
+        _cmdline="$(cat /proc/cmdline 2>/dev/null)"
+        for _p in $_cmdline; do
+            case "$_p" in
+                live-config.username=*) _user="${_p#live-config.username=}" ;;
+                username=*)             _user="${_p#username=}" ;;
+            esac
+        done
     fi
-done
+    [ -n "$_user" ] || _user="argon"
 
-# LightDM autologin drop-in. Named to sort AFTER 99-argon.conf so these
-# live-only values win; greeter-hide-users is re-enabled to friendly-false
-# here so that IF autologin ever fails, the argon user is clickable.
-if [ -d /etc/lightdm ]; then
-    mkdir -p /etc/lightdm/lightdm.conf.d
-    {
-        echo "# Generated at live boot by argon (live session only)."
-        echo "[Seat:*]"
-        echo "autologin-user=${_user}"
-        echo "autologin-user-timeout=0"
-        [ -n "$_session" ] && echo "autologin-session=${_session}"
-        echo "greeter-hide-users=false"
-    } > /etc/lightdm/lightdm.conf.d/zz-argon-live-autologin.conf 2>/dev/null || true
-    echo "argon: live autologin configured for '${_user}' (session: ${_session:-default})"
-fi
+    # Nothing else is safe to do if the account does not exist.
+    if ! id "$_user" >/dev/null 2>&1; then
+        echo "argon: no live user found; skipping live setup" >&2
+        return 0
+    fi
+    echo "argon: live user detected as '${_user}'"
 
-# --- 3. "Install Argon OS" desktop + menu launcher (live only) ----------
-_launcher_body="[Desktop Entry]
+    # --- 1. known password (greeter fallback) ---------------------------
+    echo "${_user}:${_password}" | chpasswd 2>/dev/null \
+        && echo "argon: password set for '${_user}'"
+
+    # --- 2. autologin ---------------------------------------------------
+    # Groups some PAM autologin configs require; harmless if present.
+    for _g in autologin nopasswdlogin; do
+        getent group "$_g" >/dev/null 2>&1 || groupadd "$_g" 2>/dev/null || true
+    done
+    usermod -aG autologin,nopasswdlogin "$_user" 2>/dev/null || true
+
+    # Pick an X session (prefer XFCE, else the first available).
+    _session=""
+    for _s in /usr/share/xsessions/xfce.desktop /usr/share/xsessions/*.desktop; do
+        if [ -f "$_s" ]; then
+            _session="$(basename "$_s" .desktop)"
+            break
+        fi
+    done
+
+    # LightDM autologin drop-in. Named to sort AFTER 99-argon.conf so these
+    # live-only values win; greeter-hide-users is false so that IF autologin
+    # ever fails, the real user is shown and clickable.
+    if [ -d /etc/lightdm ]; then
+        mkdir -p /etc/lightdm/lightdm.conf.d
+        {
+            echo "# Generated at live boot by argon (live session only)."
+            echo "[Seat:*]"
+            echo "autologin-user=${_user}"
+            echo "autologin-user-timeout=0"
+            echo "user-session=${_session:-xfce}"
+            [ -n "$_session" ] && echo "autologin-session=${_session}"
+            echo "greeter-hide-users=false"
+        } > /etc/lightdm/lightdm.conf.d/zz-argon-live-autologin.conf 2>/dev/null || true
+        echo "argon: autologin configured for '${_user}' (session: ${_session:-xfce})"
+    fi
+
+    # --- 3. "Install Argon OS" desktop + menu launcher (live only) ------
+    _launcher="[Desktop Entry]
 Type=Application
 Version=1.0
 Name=Install Argon OS
@@ -88,20 +102,20 @@ Terminal=false
 Categories=System;
 Keywords=install;installer;calamares;setup;"
 
-# Menu entry (system-wide; overlay only, so never on an installed system).
-if [ -d /usr/share/applications ]; then
-    printf '%s\n' "$_launcher_body" \
-        > /usr/share/applications/install-argon.desktop 2>/dev/null || true
-fi
+    if [ -d /usr/share/applications ]; then
+        printf '%s\n' "$_launcher" \
+            > /usr/share/applications/install-argon.desktop 2>/dev/null || true
+    fi
 
-# Desktop icon for the live user.
-_home="$(getent passwd "$_user" | cut -d: -f6)"
-if [ -n "$_home" ] && [ -d "$_home" ]; then
-    mkdir -p "$_home/Desktop" 2>/dev/null || true
-    printf '%s\n' "$_launcher_body" \
-        > "$_home/Desktop/install-argon.desktop" 2>/dev/null || true
-    chmod +x "$_home/Desktop/install-argon.desktop" 2>/dev/null || true
-    chown -R "${_user}:${_user}" "$_home/Desktop" 2>/dev/null || true
-fi
+    _home="$(getent passwd "$_user" | cut -d: -f6)"
+    if [ -n "$_home" ] && [ -d "$_home" ]; then
+        mkdir -p "$_home/Desktop" 2>/dev/null || true
+        printf '%s\n' "$_launcher" \
+            > "$_home/Desktop/install-argon.desktop" 2>/dev/null || true
+        chmod +x "$_home/Desktop/install-argon.desktop" 2>/dev/null || true
+        chown -R "${_user}:${_user}" "$_home/Desktop" 2>/dev/null || true
+    fi
+}
 
+configure_live_session
 : # always succeed
