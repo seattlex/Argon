@@ -6,19 +6,17 @@ release tags.
 
 ## [Unreleased]
 
-- Live autologin, actually fixed via a systemd service. Symptom was a
-  console showing `argon login: argon (automatic login) ... authentication
-  failure`: the live account existed but had no valid password (it was
-  locked), so every autologin — graphical and console — failed to
-  authenticate. Root cause: the earlier `/lib/live/config/` component that
-  was supposed to set the password was not being executed by live-config.
-  Moved the logic into `argon-live-setup.service`, a systemd unit ordered
-  before the display manager and getty (and gated to live sessions via
-  `ConditionPathExists=/run/live/medium`), which reliably unlocks the live
-  user, sets a known password (`argon`), joins the autologin groups,
-  configures LightDM autologin for the detected account, and drops the
-  "Install Argon OS" launcher. The live-config component remains as a thin,
-  idempotent wrapper. Installed systems are unaffected.
+- Live login finally fixed by **baking the `argon` user into the image at
+  build time** (the approach Kali uses for its `kali` user). The account
+  and a real password (`argon`) now exist in the squashfs itself, so
+  logging in never depends on live-config or any boot-time script running
+  correctly — the previous failures all traced to the password-setting step
+  not actually executing at boot, leaving the account locked and every
+  autologin failing with "authentication failure". The Calamares
+  `removeuser` module deletes this live user on install, and the installer
+  creates the user's real account, so installed systems stay login-required
+  and carry no baked credentials. The `argon-live-setup.service` (autologin
+  config + installer launcher) remains as a live-only belt-and-suspenders.
 
 ### Fixed (earlier iterations, superseded by the above)
 - Detect the real live account by UID instead of assuming `argon`; pass
