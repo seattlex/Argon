@@ -7,14 +7,21 @@ release tags.
 ## [Unreleased]
 
 ### Fixed
-- Live session lockout (hardened): the autologin live user had no usable
-  password, so any authentication prompt (notably the idle screen locker)
-  rejected every password. Now three independent safeguards apply — the
-  live user gets a known password (`argon`/`argon`) via a sourced-safe
-  live-config component, and BOTH possible screen lockers (light-locker and
-  xfce4-screensaver) plus lock-on-suspend are disabled — so live users
-  cannot get locked out regardless of which locker is present. Installed
-  systems are unaffected (you create your own account in the installer).
+- Live session now autologs in (root cause of the "password incorrect"
+  reports): the live image was landing on the LightDM login screen instead
+  of booting straight to the desktop, and the live user's password was not
+  something a user would know. The live-config component now explicitly
+  configures LightDM autologin (adds the user to the autologin/nopasswdlogin
+  groups and writes a live-only autologin drop-in), so the live session
+  boots directly to the desktop like Kali/Mint. As fallbacks, the live user
+  still gets a known password (`argon`/`argon`) and, if the greeter ever
+  appears, the user is shown (not hidden) so it is one click. Installed
+  systems are unaffected — they require login and create their own account.
+- Live desktop now has an "Install Argon OS" launcher (on the desktop and
+  in the menu, live session only) that starts the Calamares installer.
+- Screen-lock lockout (hardened): both possible lockers (light-locker and
+  xfce4-screensaver) and lock-on-suspend are disabled, so idle can't trap
+  the user either.
 
 ### Added — quality of life
 - Media & codecs: FFmpeg + GStreamer good/bad/ugly/libav/VAAPI so common

@@ -58,19 +58,21 @@ You'll see the **Argon boot menu**. Just press Enter on *Start Argon OS
 
 ## Step 5 — Try it, then install
 
-Argon now runs **entirely from the USB stick** — nothing on the computer
-has been touched yet. This is the *live* session: login happens
-automatically, and you can test that Wi-Fi, sound and the display all
-work.
+Argon boots **straight to the desktop** and runs **entirely from the USB
+stick** — nothing on the computer has been touched yet. This is the *live*
+session: it logs in for you, so you land right on the desktop and can test
+that Wi-Fi, sound and the display all work.
 
-> **Live login:** if you're ever asked for a password in the live session
-> (for example to install something), it's username **`argon`**, password
-> **`argon`**. This is only the throwaway demo account — when you install
-> Argon you create your own username and password.
+> **Live login:** you shouldn't see a login screen at all. If one ever
+> appears, the demo account is username **`argon`**, password **`argon`**.
+> It's only a throwaway account — when you install Argon you create your
+> own username and password.
 
-The **Welcome** window opens automatically. When you're ready:
+When you're ready to install, there's an **Install Argon OS** icon on the
+desktop (the **Welcome** window also opens automatically with the same
+button):
 
-1. Click **Install Argon OS**.
+1. Double-click **Install Argon OS** (desktop icon) — or click it in Welcome.
 2. Follow the steps: language → keyboard → **where to install**.
    * The simple choice is *Erase disk*, which also offers
      **encryption** — turn it on and pick a strong passphrase so your
