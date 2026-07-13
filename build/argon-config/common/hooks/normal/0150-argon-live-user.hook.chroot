@@ -1,0 +1,41 @@
+#!/bin/sh
+# Argon OS — create the live user at BUILD time.
+#
+# This is the reliable way (it is how Kali bakes its 'kali' user): the
+# account and a known password exist in the squashfs itself, so logging in
+# never depends on live-config or any boot-time service running correctly.
+# Previous attempts set the password from a boot script that turned out not
+# to run, leaving the account locked and every autologin failing with
+# "authentication failure". Baking it here removes that entire dependency.
+#
+# The live user is removed from INSTALLED systems by the Calamares
+# 'removeuser' module (see installer/calamares), which then creates the
+# user's real account. So this account only ever lives in the live image.
+#
+# Live credentials:  username = argon   password = argon
+
+set -e
+
+echo "argon: baking live user 'argon'"
+
+if ! id argon >/dev/null 2>&1; then
+    # First regular account, so this becomes UID 1000; do not force the UID
+    # (avoids a build failure in the unlikely case it is already taken).
+    useradd --create-home --shell /bin/bash --user-group \
+        --comment "Argon Live" argon
+fi
+
+# A REAL password (not empty/locked) so both autologin and the greeter work
+# even if the system's PAM does not permit empty passwords.
+echo 'argon:argon' | chpasswd
+
+# Admin + hardware access, and the groups PAM autologin may require.
+for grp in sudo audio video netdev plugdev cdrom bluetooth scanner \
+           lpadmin dialout autologin nopasswdlogin; do
+    groupadd -f "$grp" 2>/dev/null || true
+    usermod -aG "$grp" argon 2>/dev/null || true
+done
+
+chown -R argon:argon /home/argon 2>/dev/null || true
+
+echo "argon: live user 'argon' ready (uid $(id -u argon))"
