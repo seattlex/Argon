@@ -69,24 +69,24 @@ nothing is preinstalled and nothing listens by default.
 
 ## What you get out of the box
 
-Concrete, verifiable defaults — every one of these is active on a fresh
+Concrete, verifiable defaults, every one of these is active on a fresh
 install with zero configuration:
 
 | | Default |
 | --- | --- |
-| Telemetry | **None.** Nothing in Argon phones home |
-| Firewall | UFW enabled, deny incoming / allow outgoing |
+| Telemetry | **None.** |
+| Firewall | UFW enabled, deny incoming , allow outgoing |
 | MAC address | Randomized while scanning, per-network stable when connected |
-| DNS | DNS-over-TLS (Quad9/Mullvad), DNSSEC, no mDNS/LLMNR |
-| Browser | Firefox ESR: telemetry off, tracking protection strict, HTTPS-only, uBlock Origin |
+| DNS | DNS-over-TLS Quad9/Mullvad, DNSSEC, no mDNS/LLMNR |
+| Browser | Firefox ESR with telemetry off, tracking protection is strict, HTTPS-only, uBlock Origin |
 | Mandatory access control | AppArmor enforced |
 | Updates | Security updates applied automatically, reboots never forced |
 | Brute-force protection | fail2ban (sshd jail) |
 | Time | chrony with authenticated NTS |
-| Network services | Zero listening; ssh/tor/cups installed but opt-in |
-| Kernel | Hardened sysctl baseline (commented, auditable) |
-| Disk encryption | LUKS2 full-disk encryption in the guided installer |
-| Desktop | XFCE, dark Nordic theme, low memory footprint |
+| Network services | Zero listening, ssh/tor/cups installed but opt-in |
+| Kernel | Hardened sysctl baseline |
+| Disk encryption | LUKS2 full-disk encryption |
+| Desktop | XFCE, low memory footprint |
 
 Verify any of them yourself — see [docs/hardening.md](docs/hardening.md)
 and [docs/privacy.md](docs/privacy.md).
