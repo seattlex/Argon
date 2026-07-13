@@ -23,6 +23,16 @@ release tags.
   xfce4-screensaver) and lock-on-suspend are disabled, so idle can't trap
   the user either.
 
+### Added — project presentation
+- Professional README overhaul: screenshots gallery, a "Why Argon?"
+  section, a Kali/Ubuntu/Argon comparison table, a "Built by Argon" list of
+  original components, a four-step install flow, an architecture diagram,
+  a roadmap summary, and status badges.
+- Real screenshots of Argon Welcome and Argon Software (plus login and
+  desktop backgrounds) under `docs/screenshots/`.
+- Public roadmap (`docs/roadmap.md`) and GitHub issue templates
+  (bug report, feature request) with a Discussions/Security contact config.
+
 ### Added — quality of life
 - Media & codecs: FFmpeg + GStreamer good/bad/ugly/libav/VAAPI so common
   audio/video plays out of the box, file-manager thumbnails (tumbler,

@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an improvement or new capability for Argon OS
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea? Great. Please check the
+        [roadmap](https://github.com/seattlex/argon/blob/main/docs/roadmap.md)
+        and existing issues first.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the need, not just the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Fits Argon's principles?
+      description: Argon defaults must respect these — see CONTRIBUTING.md.
+      options:
+        - label: No telemetry / phoning home
+        - label: No network service listening by default
+        - label: FOSS-first (non-free firmware is the only exception)
