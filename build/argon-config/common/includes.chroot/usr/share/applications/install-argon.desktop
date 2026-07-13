@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Install Argon OS
+GenericName=System Installer
+Comment=Install Argon OS to this computer
+Icon=calamares
+Exec=sh -c 'pkexec calamares || sudo calamares || calamares'
+Terminal=false
+Categories=System;
+Keywords=install;installer;calamares;setup;

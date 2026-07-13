@@ -29,12 +29,25 @@ fi
 # even if the system's PAM does not permit empty passwords.
 echo 'argon:argon' | chpasswd
 
+# Make absolutely sure the account is usable: unlocked, never expiring.
+passwd -u argon 2>/dev/null || true
+chage -M -1 -E -1 -I -1 argon 2>/dev/null || true
+
 # Admin + hardware access, and the groups PAM autologin may require.
 for grp in sudo audio video netdev plugdev cdrom bluetooth scanner \
            lpadmin dialout autologin nopasswdlogin; do
     groupadd -f "$grp" 2>/dev/null || true
     usermod -aG "$grp" argon 2>/dev/null || true
 done
+
+# Put the "Install Argon OS" launcher on the live desktop (this is argon's
+# own home, so it never leaks to installed users). The menu entry lives in
+# /usr/share/applications; both are removed on install by Calamares.
+if [ -f /usr/share/applications/install-argon.desktop ]; then
+    mkdir -p /home/argon/Desktop
+    cp /usr/share/applications/install-argon.desktop /home/argon/Desktop/
+    chmod +x /home/argon/Desktop/install-argon.desktop
+fi
 
 chown -R argon:argon /home/argon 2>/dev/null || true
 

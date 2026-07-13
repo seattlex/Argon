@@ -6,17 +6,24 @@ release tags.
 
 ## [Unreleased]
 
-- Live login finally fixed by **baking the `argon` user into the image at
-  build time** (the approach Kali uses for its `kali` user). The account
-  and a real password (`argon`) now exist in the squashfs itself, so
-  logging in never depends on live-config or any boot-time script running
-  correctly — the previous failures all traced to the password-setting step
-  not actually executing at boot, leaving the account locked and every
-  autologin failing with "authentication failure". The Calamares
-  `removeuser` module deletes this live user on install, and the installer
-  creates the user's real account, so installed systems stay login-required
-  and carry no baked credentials. The `argon-live-setup.service` (autologin
-  config + installer launcher) remains as a live-only belt-and-suspenders.
+- Live login rebuilt from scratch as a script-free, layered design so it
+  works even if nothing runs correctly at boot:
+  1. The `argon` user (password `argon`, unlocked, non-expiring, in the
+     right groups) is **baked into the image at build time** — so logging
+     in is always possible, exactly how Kali bakes its `kali` user.
+  2. `live-config` is told **not** to manage users/passwords/sudo
+     (`/etc/live/config.conf` `LIVE_CONFIG_NOCOMPONENTS`), and the
+     `username=` boot parameters were removed — this is what previously
+     recreated and **locked** the account at boot, causing
+     "authentication failure".
+  3. Autologin and showing the user in the greeter are **static config
+     files** (no boot script). If autologin ever doesn't fire, the `argon`
+     user is one click away (no more "Other…" / unknown-username prompt).
+  4. On install, Calamares `removeuser` deletes the live account and a
+     `shellprocess` step removes the live-only autologin/launcher files, so
+     installed systems stay login-required with only your account.
+  Removed the previous boot-time machinery (a systemd service, a
+  live-config component, and runtime-generated drop-ins) that this replaces.
 
 ### Fixed (earlier iterations, superseded by the above)
 - Detect the real live account by UID instead of assuming `argon`; pass
