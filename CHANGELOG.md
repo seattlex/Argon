@@ -80,14 +80,15 @@ release tags.
 - Calamares installer: guided erase-disk with LUKS2 + Btrfs default,
   manual partitioning (Btrfs/EXT4), swap options, sudo-only user model,
   Argon branding and slideshow
-- Branding: geometric "A" logo, Nordfjell wallpaper, Plymouth boot theme,
-  dark Nordic XFCE + LightDM theming, os-release/issue/motd identity
+- Branding: Plymouth boot theme, dark Nordic XFCE + LightDM theming,
+  os-release/issue/motd identity (the logo and wallpapers are covered under
+  "Official Argon artwork" above)
 - Packaging: argon-core / argon-desktop-xfce / argon-privacy-tools /
   argon-dev-tools metapackages; reprepro-based signed APT repository
   (suite `argon-rolling`) with management tooling
-- CI: lint suite (shellcheck, JSON/YAML, config assembly) and ISO build
-  workflow (weekly snapshots, tag-driven draft releases with signed
-  checksums)
+- CI: lint suite (shellcheck, Python syntax, JSON/YAML, config assembly)
+  and ISO build workflow (weekly snapshots, manual dispatch, and tag-driven
+  auto-published releases with checksums + optional GPG signing)
 - Documentation: building, installation, hardening, privacy, repository,
   reproducible builds, security tooling
 - Static project website
