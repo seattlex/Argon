@@ -62,7 +62,9 @@ gstreamer1.0-plugins-good
 gstreamer1.0-plugins-bad
 gstreamer1.0-plugins-ugly
 gstreamer1.0-libav
-gstreamer1.0-vaapi
+# (hardware VA-API accel: add gstreamer1.0-va once confirmed in the archive;
+#  gstreamer1.0-vaapi was dropped from Debian/Kali. Software decode via the
+#  plugins above already plays everything.)
 tumbler
 tumbler-plugins-extra
 ffmpegthumbnailer
