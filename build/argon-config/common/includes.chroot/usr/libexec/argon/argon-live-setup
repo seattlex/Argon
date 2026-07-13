@@ -1,0 +1,104 @@
+#!/bin/sh
+# Argon OS — live session setup (the reliable one).
+#
+# Ensures the live user can actually log in: unlock the account, give it a
+# known password, join the autologin groups, configure LightDM autologin,
+# and drop an "Install Argon OS" launcher. Run by argon-live-setup.service
+# (guaranteed to run, ordered before the display manager and getty) so it
+# does not depend on live-config choosing to execute custom components.
+#
+# Runs ONLY in a live session and is idempotent. Installed systems have no
+# /run/live/medium, so this is a no-op there.
+#
+# Symptom this fixes: "argon login: argon (automatic login) ...
+# authentication failure" — the account existed but had no valid password,
+# so both the graphical and console autologins failed to authenticate.
+
+LOG=/var/log/argon-live-setup.log
+
+log() {
+    echo "[argon-live-setup] $*"
+    printf '%s %s\n' "$(date '+%F %T' 2>/dev/null)" "$*" >> "$LOG" 2>/dev/null || true
+}
+
+# Live session only.
+[ -e /run/live/medium ] || { log "not a live session; skipping"; exit 0; }
+
+PASSWORD="argon"
+
+# --- detect the ACTUAL live account -------------------------------------
+user="$(awk -F: '$3 >= 1000 && $3 < 60000 { print $1; exit }' /etc/passwd 2>/dev/null)"
+[ -n "$user" ] || user="${LIVE_USERNAME:-}"
+if [ -z "$user" ] && [ -r /proc/cmdline ]; then
+    cmdline="$(cat /proc/cmdline)"
+    for p in $cmdline; do
+        case "$p" in
+            live-config.username=*) user="${p#live-config.username=}" ;;
+            username=*)             user="${p#username=}" ;;
+        esac
+    done
+fi
+[ -n "$user" ] || user="argon"
+
+if ! id "$user" >/dev/null 2>&1; then
+    log "no live user found (looked for '$user'); nothing to do"
+    exit 0
+fi
+log "configuring live user '$user'"
+
+# --- unlock + set a known password (THE fix) ----------------------------
+# A locked account (! in shadow) makes every autologin fail authentication.
+if usermod -U "$user" 2>/dev/null; then
+    log "unlocked '$user'"
+fi
+if echo "${user}:${PASSWORD}" | chpasswd 2>/dev/null; then
+    log "password set for '$user'"
+else
+    log "WARNING: chpasswd failed for '$user'"
+fi
+
+# --- autologin groups (PAM autologin often requires membership) ---------
+for g in autologin nopasswdlogin; do
+    getent group "$g" >/dev/null 2>&1 || groupadd "$g" 2>/dev/null || true
+done
+usermod -aG autologin,nopasswdlogin "$user" 2>/dev/null || true
+
+# --- LightDM autologin (matches the detected account) -------------------
+if [ -d /etc/lightdm ]; then
+    mkdir -p /etc/lightdm/lightdm.conf.d
+    {
+        echo "# Argon live autologin (live session only)."
+        echo "[Seat:*]"
+        echo "autologin-user=${user}"
+        echo "autologin-user-timeout=0"
+        echo "greeter-hide-users=false"
+    } > /etc/lightdm/lightdm.conf.d/zz-argon-live-autologin.conf 2>/dev/null \
+        && log "wrote LightDM autologin drop-in"
+fi
+
+# --- "Install Argon OS" launcher (desktop + menu) -----------------------
+launcher="[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Install Argon OS
+GenericName=System Installer
+Comment=Install Argon OS to this computer
+Icon=calamares
+Exec=sh -c 'pkexec calamares || sudo calamares || calamares'
+Terminal=false
+Categories=System;
+Keywords=install;installer;calamares;setup;"
+
+[ -d /usr/share/applications ] && \
+    printf '%s\n' "$launcher" > /usr/share/applications/install-argon.desktop 2>/dev/null
+
+home="$(getent passwd "$user" | cut -d: -f6)"
+if [ -n "$home" ] && [ -d "$home" ]; then
+    mkdir -p "$home/Desktop" 2>/dev/null || true
+    printf '%s\n' "$launcher" > "$home/Desktop/install-argon.desktop" 2>/dev/null
+    chmod +x "$home/Desktop/install-argon.desktop" 2>/dev/null || true
+    chown -R "${user}:${user}" "$home/Desktop" 2>/dev/null || true
+fi
+
+log "done"
+exit 0

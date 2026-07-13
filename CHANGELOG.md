@@ -6,20 +6,23 @@ release tags.
 
 ## [Unreleased]
 
-### Fixed
-- Live session now autologs in (root cause of the "password incorrect"
-  reports): the live image was landing on the LightDM login screen, and the
-  real live account was not necessarily named `argon` — live-config could
-  create it as `user`, so the password and autologin (which targeted a
-  hard-coded `argon`) applied to a user that did not exist. The live-config
-  component now **detects the actual live account by UID** (the first
-  regular user, whatever its name), and sets its password, autologin groups,
-  and a live-only LightDM autologin drop-in against that real user — so the
-  session boots straight to the desktop like Kali/Mint regardless of the
-  username. The boot options also now pass `live-config.username=argon` so
-  the account is named `argon`. Fallbacks: known password (`argon`) and the
-  greeter shows the user (not hidden) if autologin ever fails. Installed
-  systems are unaffected — they require login and create their own account.
+- Live autologin, actually fixed via a systemd service. Symptom was a
+  console showing `argon login: argon (automatic login) ... authentication
+  failure`: the live account existed but had no valid password (it was
+  locked), so every autologin — graphical and console — failed to
+  authenticate. Root cause: the earlier `/lib/live/config/` component that
+  was supposed to set the password was not being executed by live-config.
+  Moved the logic into `argon-live-setup.service`, a systemd unit ordered
+  before the display manager and getty (and gated to live sessions via
+  `ConditionPathExists=/run/live/medium`), which reliably unlocks the live
+  user, sets a known password (`argon`), joins the autologin groups,
+  configures LightDM autologin for the detected account, and drops the
+  "Install Argon OS" launcher. The live-config component remains as a thin,
+  idempotent wrapper. Installed systems are unaffected.
+
+### Fixed (earlier iterations, superseded by the above)
+- Detect the real live account by UID instead of assuming `argon`; pass
+  `live-config.username=argon` so the account is named `argon`.
 - Live desktop now has an "Install Argon OS" launcher (on the desktop and
   in the menu, live session only) that starts the Calamares installer.
 - Screen-lock lockout (hardened): both possible lockers (light-locker and

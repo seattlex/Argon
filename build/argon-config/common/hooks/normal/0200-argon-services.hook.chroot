@@ -32,6 +32,11 @@ enable_unit NetworkManager.service
 enable_unit zramswap.service
 enable_unit earlyoom.service
 
+# Live session setup: unlocks the live user, sets its password and
+# configures autologin before the display manager/getty start. The unit's
+# ConditionPathExists makes it a no-op on installed systems.
+enable_unit argon-live-setup.service
+
 # Activate UFW without needing a running daemon in the chroot:
 # default deny incoming / allow outgoing, IPv6 included.
 if [ -f /etc/ufw/ufw.conf ]; then
