@@ -63,18 +63,14 @@ configure_live_session() {
     done
     usermod -aG autologin,nopasswdlogin "$_user" 2>/dev/null || true
 
-    # Pick an X session (prefer XFCE, else the first available).
-    _session=""
-    for _s in /usr/share/xsessions/xfce.desktop /usr/share/xsessions/*.desktop; do
-        if [ -f "$_s" ]; then
-            _session="$(basename "$_s" .desktop)"
-            break
-        fi
-    done
-
     # LightDM autologin drop-in. Named to sort AFTER 99-argon.conf so these
-    # live-only values win; greeter-hide-users is false so that IF autologin
-    # ever fails, the real user is shown and clickable.
+    # live-only values win. We set autologin-user to the DETECTED account
+    # (so it matches whatever live-config created — never a name that does
+    # not exist, which was the previous bug). We deliberately do NOT set a
+    # session name: an unknown session would fall back to the greeter, and
+    # lightdm already starts the only installed session (XFCE) by default.
+    # greeter-hide-users is false so that IF autologin ever fails, the real
+    # user is shown and clickable rather than hidden.
     if [ -d /etc/lightdm ]; then
         mkdir -p /etc/lightdm/lightdm.conf.d
         {
@@ -82,11 +78,9 @@ configure_live_session() {
             echo "[Seat:*]"
             echo "autologin-user=${_user}"
             echo "autologin-user-timeout=0"
-            echo "user-session=${_session:-xfce}"
-            [ -n "$_session" ] && echo "autologin-session=${_session}"
             echo "greeter-hide-users=false"
         } > /etc/lightdm/lightdm.conf.d/zz-argon-live-autologin.conf 2>/dev/null || true
-        echo "argon: autologin configured for '${_user}' (session: ${_session:-xfce})"
+        echo "argon: autologin configured for '${_user}'"
     fi
 
     # --- 3. "Install Argon OS" desktop + menu launcher (live only) ------
