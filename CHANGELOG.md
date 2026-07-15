@@ -6,6 +6,28 @@ release tags.
 
 ## [Unreleased]
 
+### Fixed — install, desktop, and CI storage
+- **Installer could not unpack the system.** Calamares' `unpackfs` step
+  failed with "Failed to find unsquashfs". Added `squashfs-tools` (provides
+  `unsquashfs`) to the image, plus the GRUB/EFI target packages
+  (`grub-common`, `grub2-common`, `grub-pc-bin`, `grub-efi-amd64-bin`,
+  `efibootmgr`, `os-prober`) so the installed system is actually bootable on
+  both BIOS and UEFI. The `-bin` variants avoid the interactive
+  "install GRUB to which disk?" debconf prompt during the chroot build.
+- **Black desktop background.** xfdesktop keys the wallpaper per-monitor by
+  RandR connector name, so the shipped `monitor0` default was ignored on
+  machines whose monitor is named otherwise, leaving the dark solid-colour
+  fallback (a near-black screen). A tiny login-time autostart
+  (`/usr/libexec/argon/argon-set-wallpaper`) now applies the wallpaper to
+  whatever monitors actually exist — live and installed alike.
+- **GitHub Actions artifact storage exhausted.** The multi-GB ISO is no
+  longer uploaded as a workflow artifact (those count against a small,
+  quota-limited store). Downloads now come only from GitHub Releases, which
+  use separate, generous storage: `v*` tags publish versioned releases, and
+  every other build refreshes a single, always-overwritten `rolling`
+  pre-release — so ISO storage stays bounded no matter how often it builds.
+  The failure build-log artifact retention dropped to 3 days.
+
 - Live login rebuilt from scratch as a script-free, layered design so it
   works even if nothing runs correctly at boot:
   1. The `argon` user (password `argon`, unlocked, non-expiring, in the

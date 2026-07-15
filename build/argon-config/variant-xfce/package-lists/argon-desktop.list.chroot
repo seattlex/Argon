@@ -88,3 +88,18 @@ atril
 
 ## Installer (live session only)
 calamares
+# unsquashfs — Calamares' unpackfs step unpacks the live filesystem.squashfs
+# onto the target with this. Without it the install fails immediately with
+# "Failed to find unsquashfs".
+squashfs-tools
+# Boot loader for the INSTALLED system. Calamares' grubcfg/bootloader steps
+# run grub-install + update-grub in the target, so these must be present in
+# the image. The -bin variants (not the grub-pc/grub-efi metapackages) are
+# used deliberately: they carry the platform modules without the interactive
+# "install to which disk?" debconf prompt that would stall the chroot build.
+grub-common
+grub2-common
+grub-pc-bin
+grub-efi-amd64-bin
+efibootmgr
+os-prober

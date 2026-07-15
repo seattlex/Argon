@@ -72,16 +72,15 @@ jobs:
           name: build-log
           path: build/build.log
           if-no-files-found: ignore
+          retention-days: 3
 
-      - name: Upload ISO artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: argon-${{ steps.version.outputs.version }}
-          path: |
-            iso/*.iso
-            iso/*.sha256
-          compression-level: 0
-          retention-days: 7
+      # NOTE: the multi-GB ISO is deliberately NOT uploaded as a workflow
+      # artifact — those count against the account's (small) Actions artifact
+      # storage quota and filled it up. Downloads are served from GitHub
+      # Releases instead, which use separate, generous release storage:
+      #   * a v* tag  -> a permanent versioned release (steps below)
+      #   * any other build -> the single, overwritten "rolling" pre-release
+      # so ISO storage stays bounded no matter how often the build runs.
 
       - name: Import release signing key
         if: github.ref_type == 'tag' && vars.HAS_SIGNING_KEY == 'true'
@@ -126,3 +125,45 @@ jobs:
             ```
             Signed releases also ship a `.sha256.sig` you can check with
             `gpg --verify argon-*.sha256.sig argon-*.sha256`.
+
+      # --- Rolling snapshot (manual + weekly builds) -----------------------
+      # Non-tag builds publish to a single, always-overwritten "rolling"
+      # pre-release. Renaming to a stable filename first means each run
+      # replaces the previous asset instead of piling up, so this release
+      # never holds more than one ISO.
+      - name: Stage rolling download
+        if: github.ref_type != 'tag' && success()
+        run: |
+          cd iso
+          iso=$(ls *.iso | head -n1)
+          mv -f "$iso" argon-rolling-amd64.iso
+          rm -f ./*.sha256
+          sha256sum argon-rolling-amd64.iso > argon-rolling-amd64.iso.sha256
+
+      - name: Publish rolling snapshot
+        if: github.ref_type != 'tag' && success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: rolling
+          name: Argon OS (rolling snapshot)
+          prerelease: true
+          make_latest: false
+          fail_on_unmatched_files: false
+          files: |
+            iso/argon-rolling-amd64.iso
+            iso/argon-rolling-amd64.iso.sha256
+          body: |
+            ## Argon OS — rolling snapshot
+
+            Latest automatic build (`${{ steps.version.outputs.version }}`).
+            Unversioned and may change at any time; for a stable download use a
+            versioned release from the
+            [releases page](https://github.com/seattlex/argon/releases).
+
+            **Download** `argon-rolling-amd64.iso`, write it to a USB stick
+            (e.g. with [balenaEtcher](https://etcher.balena.io/)), and boot.
+
+            ### Verify your download
+            ```
+            sha256sum -c argon-rolling-amd64.iso.sha256
+            ```

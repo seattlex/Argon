@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Argon Wallpaper
+Comment=Apply the Argon default wallpaper on every connected monitor
+Exec=/usr/libexec/argon/argon-set-wallpaper
+OnlyShowIn=XFCE;
+X-XFCE-Autostart-Override=true
+NoDisplay=true
+Terminal=false
