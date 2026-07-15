@@ -6,7 +6,7 @@
 
 <p align="center">
   <b>Privacy first. Security by default.</b><br/>
-  A hardened, privacy-focused <b>desktop</b> Linux distribution built on Kali rolling — developed in Norway.
+  A hardened, privacy-focused <b>desktop</b> Linux distribution built on Kali rolling, developed in Norway.
 </p>
 
 <p align="center">
@@ -48,7 +48,7 @@ tools, and a polished desktop experience**.
 It's *not* "Kali with a different wallpaper." Kali is a professional
 pentesting platform that expects you to configure it. Argon takes Kali's
 excellent package base and turns it into an OS a privacy-conscious person
-can install and use on day one — firewall already up, DNS already
+can install and use on day one, firewall already up, DNS already
 encrypted, telemetry never present, and a real software center instead of
 the terminal. The full Kali toolset stays one `apt install` away, but
 nothing is preinstalled and nothing listens by default.
@@ -88,19 +88,19 @@ install with zero configuration:
 | Disk encryption | LUKS2 full-disk encryption |
 | Desktop | XFCE, low memory footprint |
 
-Verify any of them yourself — see [docs/hardening.md](docs/hardening.md)
+Verify any of them yourself and see [docs/hardening.md](docs/hardening.md)
 and [docs/privacy.md](docs/privacy.md).
 
 ## Built by Argon
 
-Argon isn't a re-skin — these components are original to the project:
+Argon isn't a re-skin and these components are original to the project:
 
 - ✅ **Argon Welcome** — first-login greeter (install, get software, review privacy defaults)
 - ✅ **Argon Software** — graphical app store with curated categories and one-click, polkit-authenticated installs
 - ✅ **Argon Virtual Audio** — Voicemeeter-style virtual audio cables on PipeWire
 - ✅ **Argon branding** — logo, wallpapers, Plymouth boot theme, branded GRUB/isolinux boot menu
 - ✅ **Installer customization** — Calamares with a LUKS2 + Btrfs guided default and a sudo-only, no-root user model
-- ✅ **Desktop theme & layout** — dark Nordic XFCE, not stock XFCE
+- ✅ **Desktop theme & layout** — dark custom XFCE, not stock XFCE
 - ✅ **Security & privacy defaults** — the full hardening stack above
 - ✅ **Package repository** — signed APT repo + `argon-*` metapackages
 - ✅ **Reproducible build pipeline** — scripted live-build + CI that produces the ISO
@@ -113,7 +113,7 @@ More detail in [docs/applications.md](docs/applications.md).
 ①  Download the ISO   →   ②  Flash to USB (Etcher)   →   ③  Boot it   →   ④  Click "Install Argon OS"
 ```
 
-The live session boots **straight to the desktop** — no login screen — and
+The live session boots **straight to the desktop**, no login screen and
 an **Install Argon OS** icon is right there on the desktop when you're
 ready. No prior Linux experience, no terminal, no Kali required.
 
@@ -124,23 +124,6 @@ ready. No prior Linux experience, no terminal, no Kali required.
 Grab an ISO from the [releases page](https://github.com/seattlex/argon/releases)
 (weekly rolling snapshots + versioned releases).
 
-## Architecture
-
-```
-┌──────────────────────────────────────────────┐
-│  Your apps  +  Argon apps                      │  Welcome · Software · Virtual Audio
-├──────────────────────────────────────────────┤
-│  XFCE desktop  (Argon dark Nordic theme)       │
-├──────────────────────────────────────────────┤
-│  Argon layer                                   │  hardening · privacy · branding · installer
-├──────────────────────────────────────────────┤
-│  Kali rolling packages                         │  (full toolset available, none preinstalled)
-├──────────────────────────────────────────────┤
-│  Debian base                                   │
-├──────────────────────────────────────────────┤
-│  Linux kernel  (LTS, hardened sysctl)          │
-└──────────────────────────────────────────────┘
-```
 
 ## Roadmap
 
