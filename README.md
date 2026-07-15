@@ -17,24 +17,6 @@
   <img src="https://img.shields.io/badge/telemetry-none-brightgreen?style=flat-square" alt="telemetry"/>
 </p>
 
----
-
-## Screenshots
-
-<p align="center">
-  <img src="docs/screenshots/argon-welcome.png" width="46%" alt="Argon Welcome"/>
-  &nbsp;
-  <img src="docs/screenshots/argon-software.png" width="46%" alt="Argon Software"/>
-</p>
-<p align="center">
-  <img src="docs/screenshots/login-background.png" width="46%" alt="Login screen"/>
-  &nbsp;
-  <img src="docs/screenshots/desktop-wallpaper.png" width="46%" alt="Desktop"/>
-</p>
-<p align="center">
-  <sub><i>Argon Welcome · Argon Software · login screen · desktop.
-  Full installer and desktop walkthroughs ship with each release.</i></sub>
-</p>
 
 ---
 
