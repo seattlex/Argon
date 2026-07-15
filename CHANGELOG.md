@@ -6,6 +6,21 @@ release tags.
 
 ## [Unreleased]
 
+### Fixed — installer bootloader + wallpaper (second boot pass)
+- **Install failed at the end: "bootloader/main.py raised an exception".**
+  Calamares' bootloader module reads the GRUB binary names and EFI id
+  directly out of its config (`grubInstall`, `efiBootloaderId`, …); with no
+  `bootloader.conf` present it raised a `KeyError`. Added a proper
+  `bootloader.conf` (BIOS + UEFI, with removable-media fallback) and a
+  `grubcfg.conf` that also carries Argon branding and the AppArmor kernel
+  command line onto installed systems.
+- **Desktop background still black.** The first wallpaper fix only updated
+  the generic `monitor0` node; xfdesktop actually renders the output under
+  its real RandR connector name (e.g. `Virtual-1`), which stayed unset. The
+  login-time script now enumerates the *connected* outputs via `xrandr` and
+  sets the wallpaper on each (added `x11-xserver-utils` for `xrandr`). The
+  shipped image is unchanged — the Argon mountains scene.
+
 ### Fixed — install, desktop, and CI storage
 - **Installer could not unpack the system.** Calamares' `unpackfs` step
   failed with "Failed to find unsquashfs". Added `squashfs-tools` (provides

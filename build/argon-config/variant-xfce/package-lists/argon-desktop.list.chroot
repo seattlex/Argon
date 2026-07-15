@@ -6,6 +6,9 @@
 xorg
 xserver-xorg-input-libinput
 xserver-xorg-video-all
+# xrandr — used by Argon's login-time wallpaper script to target the real
+# connected monitor outputs (recommends are off, so list it explicitly).
+x11-xserver-utils
 lightdm
 lightdm-gtk-greeter
 light-locker

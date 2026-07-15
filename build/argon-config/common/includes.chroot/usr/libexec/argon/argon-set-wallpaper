@@ -1,46 +1,61 @@
 #!/bin/sh
 # Argon OS — apply the default desktop wallpaper on every connected monitor.
 #
-# Why this exists: xfdesktop stores the backdrop image per-monitor, keyed by
-# the RandR connector name (Virtual-1, eDP-1, HDMI-1, ...). We can't know that
-# name at build time, so the shipped /etc/xdg xfce4-desktop.xml can only give a
-# generic "monitor0" node. On any machine whose monitor is named something else
-# xfdesktop ignores that node and falls back to the solid colour — which for
-# Argon's dark palette looks like a black screen. This runs at login and writes
-# the wallpaper to whatever backdrop nodes xfconf actually created, so the image
-# shows regardless of the connector name. Applies to live and installed alike.
+# Why this exists: xfdesktop stores the backdrop image per monitor, keyed by
+# the RandR *connector* name (Virtual-1, eDP-1, HDMI-1, ...). We can't know
+# that name at build time, so the shipped /etc/xdg xfce4-desktop.xml can only
+# provide a generic "monitor0" node — which xfdesktop ignores on any machine
+# whose real output is named otherwise, leaving the dark solid-colour fallback
+# (a black-looking screen). This runs at login and writes the wallpaper to the
+# actual connected outputs, so the image shows regardless of the name. Applies
+# to live and installed sessions alike.
 set -eu
 
 WALL=/usr/share/backgrounds/argon/argon-default.png
 [ -f "$WALL" ] || exit 0
-
 CHANNEL=xfce4-desktop
 
-# Wait for xfdesktop to populate the channel with its per-monitor backdrop
-# nodes (they don't exist the instant the session starts).
+# image-style 5 = "Zoomed" (fill the screen, keep aspect).
+set_backdrop() {
+    base="/backdrop/screen0/monitor$1/workspace0"
+    xfconf-query -c "$CHANNEL" -p "$base/last-image" -s "$WALL" 2>/dev/null \
+        || xfconf-query -c "$CHANNEL" -p "$base/last-image" -n -t string -s "$WALL" 2>/dev/null || true
+    xfconf-query -c "$CHANNEL" -p "$base/image-style" -s 5 2>/dev/null \
+        || xfconf-query -c "$CHANNEL" -p "$base/image-style" -n -t int -s 5 2>/dev/null || true
+}
+
+# Wait for X / xfconfd to come up.
 i=0
-props=""
 while [ "$i" -lt 20 ]; do
-    props=$(xfconf-query -c "$CHANNEL" -l 2>/dev/null | grep '/last-image$' || true)
-    [ -n "$props" ] && break
+    xfconf-query -c "$CHANNEL" -l >/dev/null 2>&1 && break
     i=$((i + 1))
     sleep 1
 done
 
-if [ -n "$props" ]; then
-    # Point every existing backdrop at the wallpaper and make sure it's shown
-    # zoomed-to-fit rather than left on the solid colour.
-    for p in $props; do
-        xfconf-query -c "$CHANNEL" -p "$p" -s "$WALL" 2>/dev/null || true
-        style="${p%/last-image}/image-style"
-        xfconf-query -c "$CHANNEL" -p "$style" -s 5 2>/dev/null \
-            || xfconf-query -c "$CHANNEL" -p "$style" -n -t int -s 5 2>/dev/null || true
+did=0
+
+# Preferred: set the wallpaper for each *connected* RandR output by its real
+# name — this is the node xfdesktop actually renders.
+if command -v xrandr >/dev/null 2>&1; then
+    for out in $(xrandr --query 2>/dev/null | awk '/ connected/{print $1}'); do
+        set_backdrop "$out"
+        did=1
     done
-else
-    # xfdesktop never created a node (rare) — seed the generic one ourselves.
-    base=/backdrop/screen0/monitor0/workspace0
-    xfconf-query -c "$CHANNEL" -p "$base/last-image" -n -t string -s "$WALL" 2>/dev/null || true
-    xfconf-query -c "$CHANNEL" -p "$base/image-style" -n -t int -s 5 2>/dev/null || true
+fi
+
+# Also refresh any backdrop nodes xfdesktop already created (covers the generic
+# monitor0 default and any extra workspaces).
+for p in $(xfconf-query -c "$CHANNEL" -l 2>/dev/null | grep '/last-image$'); do
+    xfconf-query -c "$CHANNEL" -p "$p" -s "$WALL" 2>/dev/null || true
+    style="${p%/last-image}/image-style"
+    xfconf-query -c "$CHANNEL" -p "$style" -s 5 2>/dev/null \
+        || xfconf-query -c "$CHANNEL" -p "$style" -n -t int -s 5 2>/dev/null || true
+    did=1
+done
+
+# Nothing existed and xrandr was unavailable — seed the generic node.
+if [ "$did" -eq 0 ]; then
+    set_backdrop 0
 fi
 
 exit 0
