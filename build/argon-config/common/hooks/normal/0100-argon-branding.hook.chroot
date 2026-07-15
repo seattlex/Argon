@@ -43,35 +43,16 @@ EOF
 # Default hostname (also set via kernel cmdline for the live session)
 echo "argon" > /etc/hostname
 
-# Plymouth boot splash: render the logo bitmap, then select the theme
-if command -v rsvg-convert >/dev/null 2>&1 \
-    && [ -f /usr/share/icons/argon/argon-logo-mono.svg ] \
-    && [ -d /usr/share/plymouth/themes/argon ]; then
-    rsvg-convert -w 192 -h 192 \
-        -o /usr/share/plymouth/themes/argon/logo.png \
-        /usr/share/icons/argon/argon-logo-mono.svg || true
-fi
-if command -v plymouth-set-default-theme >/dev/null 2>&1; then
-    if [ -f /usr/share/plymouth/themes/argon/logo.png ]; then
-        plymouth-set-default-theme argon || true
-    fi
+# Branding artwork (logo, wallpaper, plymouth logo, calamares images) is
+# shipped as ready-made PNGs via includes.chroot — no rendering needed here.
+# Just select the plymouth theme once its logo is in place.
+if command -v plymouth-set-default-theme >/dev/null 2>&1 \
+    && [ -f /usr/share/plymouth/themes/argon/logo.png ]; then
+    plymouth-set-default-theme argon || true
 fi
 
-# Calamares branding bitmaps (referenced by branding.desc)
-if command -v rsvg-convert >/dev/null 2>&1 \
-    && [ -d /etc/calamares/branding/argon ]; then
-    rsvg-convert -w 128 -h 128 \
-        -o /etc/calamares/branding/argon/logo.png \
-        /usr/share/icons/argon/argon-logo.svg || true
-    rsvg-convert -w 320 -h 320 \
-        -o /etc/calamares/branding/argon/welcome.png \
-        /usr/share/icons/argon/argon-logo.svg || true
-fi
-
-# Render the SVG wallpaper to PNG for components that cannot read SVG
-if command -v rsvg-convert >/dev/null 2>&1 \
-    && [ -f /usr/share/backgrounds/argon/argon-default.svg ]; then
-    rsvg-convert -w 3840 -h 2160 \
-        -o /usr/share/backgrounds/argon/argon-default.png \
-        /usr/share/backgrounds/argon/argon-default.svg || true
+# Refresh the icon cache so the Argon app icon resolves immediately.
+if command -v gtk-update-icon-cache >/dev/null 2>&1 \
+    && [ -d /usr/share/icons/hicolor ]; then
+    gtk-update-icon-cache -f /usr/share/icons/hicolor >/dev/null 2>&1 || true
 fi

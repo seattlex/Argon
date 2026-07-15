@@ -12,6 +12,7 @@
 | [repository.md](repository.md) | Using and operating the Argon APT repository |
 | [reproducible-builds.md](reproducible-builds.md) | Reproducibility goals and current status |
 | [security-tools.md](security-tools.md) | Installing security tooling from the Kali repositories |
+| [roadmap.md](roadmap.md) | What's shipped and what's planned |
 
 ## Quick orientation
 

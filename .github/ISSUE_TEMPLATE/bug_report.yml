@@ -1,0 +1,55 @@
+name: Bug report
+description: Something in Argon OS isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Argon. Please search existing issues first.
+        For **security vulnerabilities**, do not file a public issue — see
+        [SECURITY.md](https://github.com/seattlex/argon/blob/main/SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: Argon version
+      description: From `cat /etc/os-release` (VERSION), or the ISO filename.
+      placeholder: "rolling-YYYYMMDD or 0.1.x"
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Where does it happen?
+      options:
+        - Live session (USB)
+        - Installed system
+        - Virtual machine
+        - Building the ISO
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Boot the live ISO
+        2. ...
+        3. See error
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware / VM
+      placeholder: "e.g. ThinkPad T480, or VirtualBox 7 / QEMU"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: e.g. `journalctl -b`, `build/build.log`, or a photo of the screen.
+      render: shell

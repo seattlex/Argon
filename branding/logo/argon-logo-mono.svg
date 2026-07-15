@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <!-- Argon OS logo — monochrome. Bold arrowhead "A" with a swoosh base.
-       Single colour; recolour via `fill` or sed. -->
-  <g fill="#ECEFF4">
-    <polygon points="256,52 62,460 204,460"/>
-    <polygon points="256,52 450,460 308,460"/>
-    <path d="M206 430 Q256 366 306 430 Q256 400 206 430 Z"/>
-  </g>
-</svg>

@@ -21,11 +21,15 @@ sudo dd if=argon-<version>-xfce-amd64.iso of=/dev/sdX bs=4M status=progress ofla
 
 ## 3. Boot the live system
 
-The image boots on both UEFI and legacy BIOS machines. The live session
-logs in automatically as the `argon` user (password `argon`, should any
-prompt ask — the automatic screen-lock is disabled in the live session so
-you can't get locked out). Nothing touches your disks until you run the
-installer, and the installer is where you create your own account.
+The image boots on both UEFI and legacy BIOS machines and takes you
+**straight to the Argon desktop** — the live session logs in
+automatically, no login screen (just like Kali or Mint). Nothing touches
+your disks until you run the installer, and the installer is where you
+create your own account.
+
+(If a login prompt ever does appear, the live account is `argon` /
+`argon`. Automatic screen-locking is disabled in the live session so you
+can't get locked out.)
 
 The live session already runs with Argon defaults, so you can check the
 hardware works — Wi-Fi (with a randomized MAC), display, sound — before
@@ -33,7 +37,8 @@ committing to an install.
 
 ## 4. Install
 
-Launch **Install Argon OS** (Calamares) from the menu.
+Double-click the **Install Argon OS** icon on the desktop (or launch it
+from the menu, or the Welcome window). This starts the Calamares installer.
 
 * **Erase disk** is the guided path. It defaults to **Btrfs** and offers
   **LUKS2 full-disk encryption** — just set a passphrase. Use a long

@@ -1,0 +1,8 @@
+[Desktop Entry]
+# Argon OS override: do not auto-start the XFCE screensaver/locker.
+# See light-locker.desktop for rationale — no automatic screen locking.
+Type=Application
+Name=Screensaver (disabled by Argon)
+Exec=true
+Hidden=true
+X-GNOME-Autostart-enabled=false

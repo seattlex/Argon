@@ -70,34 +70,29 @@ cp -a "$VARIANT_DIR/." "$BUILD_DIR/config/"
 
 CHROOT_INC="$BUILD_DIR/config/includes.chroot"
 
-# Branding: plymouth theme, logo, wallpapers
+# Branding: plymouth theme (with its logo.png) and desktop/login wallpapers.
+# The app icon ships in the argon-apps package; source logo art stays in the
+# repo and is not copied raw into the image.
 mkdir -p "$CHROOT_INC/usr/share/plymouth/themes"
 cp -a "$REPO_ROOT/branding/plymouth/argon" "$CHROOT_INC/usr/share/plymouth/themes/"
-mkdir -p "$CHROOT_INC/usr/share/backgrounds/argon" "$CHROOT_INC/usr/share/icons/argon"
+mkdir -p "$CHROOT_INC/usr/share/backgrounds/argon"
 cp -a "$REPO_ROOT/wallpapers/." "$CHROOT_INC/usr/share/backgrounds/argon/"
-cp -a "$REPO_ROOT/branding/logo/." "$CHROOT_INC/usr/share/icons/argon/"
 
 # Installer: Calamares configuration and branding
 mkdir -p "$CHROOT_INC/etc/calamares"
 cp -a "$REPO_ROOT/installer/calamares/." "$CHROOT_INC/etc/calamares/"
 
 # Bootloaders: Argon-branded GRUB (UEFI) and isolinux (BIOS) menus.
-# live-build reads customizations from config/bootloaders/.
+# live-build reads customizations from config/bootloaders/. The splash
+# images are pre-made PNGs (branding/boot-splash-*.png) — no rendering.
 if [ -d "$BUILD_DIR/config/bootloaders" ]; then
-    # Render the boot splash to PNG for both bootloaders (best effort).
-    if command -v rsvg-convert >/dev/null 2>&1; then
-        rsvg-convert -w 960 -h 720 \
-            -o "$BUILD_DIR/config/bootloaders/isolinux/splash.png" \
-            "$REPO_ROOT/branding/boot-splash.svg" 2>/dev/null || true
-        rsvg-convert -w 960 -h 720 \
-            -o "$BUILD_DIR/config/bootloaders/grub-pc/argon-splash.png" \
-            "$REPO_ROOT/branding/boot-splash.svg" 2>/dev/null || true
-        if [ -d "$BUILD_DIR/config/bootloaders/grub-pc/theme" ]; then
-            cp "$BUILD_DIR/config/bootloaders/grub-pc/argon-splash.png" \
-               "$BUILD_DIR/config/bootloaders/grub-pc/theme/" 2>/dev/null || true
-        fi
-    else
-        echo "    (rsvg-convert missing: boot menu will use its background colour)"
+    cp "$REPO_ROOT/branding/boot-splash-isolinux.png" \
+       "$BUILD_DIR/config/bootloaders/isolinux/splash.png"
+    cp "$REPO_ROOT/branding/boot-splash-grub.png" \
+       "$BUILD_DIR/config/bootloaders/grub-pc/argon-splash.png"
+    if [ -d "$BUILD_DIR/config/bootloaders/grub-pc/theme" ]; then
+        cp "$REPO_ROOT/branding/boot-splash-grub.png" \
+           "$BUILD_DIR/config/bootloaders/grub-pc/theme/argon-splash.png"
     fi
 fi
 

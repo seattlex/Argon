@@ -30,9 +30,3 @@ lot.
 * Argon's hardening (UFW deny-in, AppArmor, unattended upgrades) applies
   unchanged; some capture tools need firewall or group adjustments, which
   their Kali documentation covers.
-
-## A note on responsibility
-
-These tools are for systems you own or are explicitly authorized to
-test. Unauthorized access to computer systems is illegal in Norway
-(Straffeloven § 204/205), across the EU, and virtually everywhere else.

@@ -50,13 +50,29 @@ Depends: ${misc:Depends},
  arc-theme,
  papirus-icon-theme,
  fonts-noto-core,
+ fonts-noto-color-emoji,
  pipewire,
  pipewire-pulse,
  wireplumber,
- pavucontrol
+ pavucontrol,
+ ffmpeg,
+ gstreamer1.0-plugins-good,
+ gstreamer1.0-plugins-bad,
+ gstreamer1.0-plugins-ugly,
+ gstreamer1.0-libav,
+ tumbler,
+ ffmpegthumbnailer,
+ parole,
+ xfce4-clipman-plugin,
+ redshift-gtk,
+ zram-tools,
+ earlyoom,
+ galculator,
+ baobab,
+ atril
 Description: Argon OS XFCE desktop (metapackage)
  The default Argon desktop: XFCE with dark Nordic theming, hardened
- Firefox ESR and PipeWire audio.
+ Firefox ESR, PipeWire audio, media codecs and quality-of-life tools.
 
 Package: argon-privacy-tools
 Architecture: all
