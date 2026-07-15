@@ -6,6 +6,26 @@ release tags.
 
 ## [Unreleased]
 
+### Fixed — bootloader made robust across the whole install matrix
+- **`grub-install --target=i386-pc … returned error code 1`.** The erase-disk
+  layout now creates a separate **unencrypted 1 GiB ext4 `/boot`**
+  (`partitionLayout` + `noEncrypt`, verified against the Calamares source)
+  ahead of the root filesystem. GRUB therefore never has to read an
+  encrypted or btrfs volume, which makes the bootloader step behave the
+  same on BIOS and UEFI, plain and LUKS installs — and it is the only
+  layout under which encrypted installs can boot at all (GRUB cannot
+  unlock LUKS2/argon2id, so an encrypted `/boot` is unbootable even when
+  the install succeeds).
+- **Encrypted installs could never unlock at boot**: added
+  `cryptsetup-initramfs` (only a Recommends of cryptsetup, and recommends
+  are globally off) so the initramfs can actually open the LUKS root.
+- Ship an explicit Calamares `mount.conf` (upstream defaults plus
+  `/dev/pts`) so the target chroot that runs `grub-install`,
+  `grub-mkconfig` and `update-initramfs` never depends on
+  package-shipped defaults.
+- Documented that UEFI Secure Boot must be disabled (Kali kernels are
+  unsigned); noted the unencrypted-`/boot` scheme in the install guide.
+
 ### Fixed — installer bootloader + wallpaper (second boot pass)
 - **Install failed at the end: "bootloader/main.py raised an exception".**
   Calamares' bootloader module reads the GRUB binary names and EFI id

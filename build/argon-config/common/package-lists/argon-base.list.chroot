@@ -70,6 +70,10 @@ rsync
 unzip
 p7zip-full
 cryptsetup
+# Unlocks the encrypted root from the initramfs at boot. It is only a
+# Recommends of cryptsetup (and recommends are globally off), so without
+# listing it an encrypted install would finish fine and then never boot.
+cryptsetup-initramfs
 btrfs-progs
 dosfstools
 gparted
