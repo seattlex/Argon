@@ -12,7 +12,17 @@ x11-xserver-utils
 lightdm
 lightdm-gtk-greeter
 light-locker
-dbus-x11
+# dbus-user-session, NOT dbus-x11. This is the actual reason audio was
+# dead: PipeWire/WirePlumber run under the systemd --user manager and
+# reach each other over the per-user session bus at $XDG_RUNTIME_DIR/bus,
+# which logind+pam_systemd only set up when dbus-user-session is
+# installed. With the legacy dbus-x11 instead, wireplumber.service dies
+# with "Failed to connect to session bus" and no audio nodes are ever
+# created — Debian bug #998167 / #1032351, and exactly our symptom. Their
+# enable symlinks were present all along (the packages ship them); the bus
+# they connect to was not. Debian's own XFCE desktop task ships
+# dbus-user-session; recommends being off is why we didn't get it.
+dbus-user-session
 polkitd
 pkexec
 mate-polkit

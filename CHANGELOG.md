@@ -6,19 +6,27 @@ release tags.
 
 ## [Unreleased]
 
-### Fixed — no audio at all (PipeWire user services were never enabled)
-- **The machine was silent.** PipeWire, `pipewire-pulse` and WirePlumber
-  were installed, but nothing started them: they ship systemd *user* units,
-  and the service hook only enabled *system* units (`systemctl enable`
-  can't touch user units). With no WirePlumber running there is no session
-  manager to route audio, which is the textbook "PipeWire installed but no
-  sound". Now `systemctl --global enable`d for every user — the live
-  `argon` account and any the installer creates — via `pipewire.socket`,
-  `pipewire-pulse.socket` and `wireplumber.service`.
-- Added the audio-stack pieces that `--apt-recommends false` had been
-  silently dropping: `pipewire-alsa` (plain-ALSA apps), `rtkit`
-  (glitch-free realtime scheduling), and `libspa-0.2-bluetooth` — without
-  which a paired Bluetooth headset connects but plays nothing.
+### Fixed — no audio at all (missing `dbus-user-session`)
+- **The machine was silent.** PipeWire and WirePlumber were installed and
+  their user services were enabled — but `wireplumber.service` died at
+  start with *"Failed to connect to session bus"*, so no audio nodes were
+  ever created. The cause was a missing **`dbus-user-session`**: PipeWire
+  and WirePlumber run under the systemd `--user` manager and reach each
+  other over the per-user session bus at `$XDG_RUNTIME_DIR/bus`, which
+  `logind`/`pam_systemd` only set up when that package is installed. Argon
+  shipped the legacy **`dbus-x11`** instead (recommends are off, so the
+  desktop task's `dbus-user-session` never came in), which starts an ad-hoc
+  bus per X display and leaves the `--user` services unreachable. This is
+  Debian bug #998167 / #1032351 exactly. Replaced `dbus-x11` with
+  `dbus-user-session` (what Debian's own XFCE task ships).
+- Added the audio-stack pieces that `--apt-recommends false` also dropped:
+  `rtkit` (glitch-free realtime scheduling) and `libspa-0.2-bluetooth` —
+  without which a paired Bluetooth headset connects but plays nothing.
+  (`pipewire-alsa` turned out to already be pulled in; listing it is
+  harmless and explicit.)
+- Belt-and-suspenders `systemctl --global enable` of the PipeWire user
+  units in the service hook. The packages already ship them enabled, so
+  this is normally a no-op; it guards against a future packaging change.
 - **Bluetooth was enabled and then immediately disabled** in the same hook
   (the new `enable` line met a pre-existing `disable` line left from when
   Bluetooth wasn't installed), so it shipped off. Removed the stale

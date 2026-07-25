@@ -44,12 +44,13 @@ enable_unit NetworkManager.service
 enable_unit bluetooth.service
 
 # --- Audio: PipeWire for every user -------------------------------------
-# Without this the audio server simply never starts and the machine is
-# silent: the packages are installed but their user units are not enabled,
-# so nothing creates the audio nodes. wireplumber is the session manager —
-# with it absent PipeWire has no policy to route anything, which is the
-# classic "PipeWire installed but no sound" case. The two sockets provide
-# the ALSA/native and PulseAudio entry points apps connect to.
+# Belt and suspenders. The pipewire/wireplumber packages already ship these
+# user units enabled (their postinst writes the /etc/systemd/user symlinks),
+# so normally these calls are idempotent no-ops. They are kept so the intent
+# is explicit and survives a future packaging change that stops
+# auto-enabling. NOTE: enabling is not what made audio work — the units were
+# enabled all along; the fix was installing dbus-user-session (see the
+# desktop package list) so the user session bus they connect to exists.
 enable_user_unit_global pipewire.socket
 enable_user_unit_global pipewire-pulse.socket
 enable_user_unit_global wireplumber.service
