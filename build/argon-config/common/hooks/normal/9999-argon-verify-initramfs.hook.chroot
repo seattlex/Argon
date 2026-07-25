@@ -1,0 +1,82 @@
+#!/bin/sh
+# Argon OS — assert the shipped initramfs can actually reach the live medium.
+#
+# Numbered 9999 on purpose. 0250 regenerates the initramfs with Argon's
+# boot-media drivers, but live-build injects its own hooks into the same
+# directory (1010-enable-cryptsetup regenerates the initramfs, and the
+# built-ins run up to 9020), so anything checked earlier can still be
+# replaced. This runs after all of them.
+#
+# It is still not the final word: live-build regenerates the initramfs once
+# more in `lb chroot_hacks`, a build stage that runs after every hook. This
+# hook therefore catches a broken configuration early and with a clear
+# message, while the authoritative assertion — against the file actually
+# copied into binary/live/ — lives in scripts/build-iso.sh.
+#
+# The failure being guarded against: live-boot scans for
+# /live/filesystem.squashfs for 60 seconds, then panics into a BusyBox
+# "(initramfs)" prompt. It is invisible in a VM — whose virtual disk uses
+# drivers present in any initrd — and only shows up when a user boots a
+# physical USB stick, which is far too late to find out.
+set -e
+
+# lsinitramfs comes from initramfs-tools, which is always present in the
+# chroot (the kernel pulls it in). If it ever is not, that is itself a
+# problem worth failing on rather than skipping the check silently.
+if ! command -v lsinitramfs >/dev/null 2>&1; then
+    echo "argon: ERROR lsinitramfs missing — cannot verify the initramfs" >&2
+    exit 1
+fi
+
+# uas: most USB 3 sticks bind to it rather than usb-storage.
+# vfat: a stick written by Rufus in "ISO mode" holds the live files on
+#       FAT32, which is visible but unmountable without it.
+# squashfs/overlay: the live root itself.
+REQUIRED_MODULES="usb-storage uas xhci_pci squashfs overlay vfat"
+
+checked_any=0
+
+for kdir in /lib/modules/*/; do
+    kver="${kdir%/}"
+    kver="${kver##*/}"
+    initrd="/boot/initrd.img-${kver}"
+
+    [ -e "/boot/vmlinuz-${kver}" ] || continue
+    if [ ! -e "${initrd}" ]; then
+        echo "argon: ERROR ${kver} has a kernel but no initramfs" >&2
+        exit 1
+    fi
+
+    contents="$(lsinitramfs "${initrd}")"
+    missing=""
+    for mod in ${REQUIRED_MODULES}; do
+        # Module names and module *filenames* disagree about separators:
+        # modprobe knows xhci_pci, the file on disk is xhci-pci.ko. Match
+        # either, and allow any compression suffix (.ko.xz, .ko.zst, ...).
+        pattern="$(printf '%s' "${mod}" | sed 's/[-_]/[-_]/g')"
+        # This pipe is only safe because this script does NOT set pipefail.
+        # grep -q exits on the first match and kills printf with SIGPIPE; with
+        # pipefail that 141 becomes the pipeline's status and every match reads
+        # as a miss. Do not add `set -o pipefail` here without switching to a
+        # here-string, as scripts/build-iso.sh had to.
+        if ! printf '%s\n' "${contents}" \
+            | grep -qE "/${pattern}\.ko(\.[a-z0-9]+)?$"; then
+            missing="${missing} ${mod}"
+        fi
+    done
+
+    if [ -n "${missing}" ]; then
+        echo "argon: ERROR shipped initramfs for ${kver} is missing:${missing}" >&2
+        echo "argon: this image would drop to a BusyBox (initramfs) prompt when" >&2
+        echo "argon: booted from USB — refusing to build it" >&2
+        exit 1
+    fi
+
+    echo "argon: shipped initramfs ${kver} verified (${REQUIRED_MODULES})"
+    checked_any=1
+done
+
+if [ "${checked_any}" -eq 0 ]; then
+    echo "argon: ERROR no kernel/initramfs pair found to verify" >&2
+    exit 1
+fi

@@ -15,6 +15,19 @@ enable_unit() {
     echo "argon: WARNING could not enable $1 (unit not present)" >&2
 }
 
+# Enable a systemd *user* unit for every user on the image. PipeWire and
+# WirePlumber ship user units, not system units — `systemctl enable` (system
+# scope) can't touch them. `--global` writes the enable symlinks under
+# /etc/systemd/user/, so the unit starts in every user's session: the live
+# `argon` user and any account the installer creates alike. This needs no
+# running user session, so it works during the chroot build.
+enable_user_unit_global() {
+    if systemctl --global enable "$1" 2>/dev/null; then
+        return 0
+    fi
+    echo "argon: WARNING could not --global enable $1 (unit not present)" >&2
+}
+
 # --- Enabled by default -------------------------------------------------
 enable_unit apparmor.service
 enable_unit ufw.service
@@ -26,6 +39,21 @@ enable_unit apt-daily-upgrade.timer
 enable_unit chrony.service || enable_unit chronyd.service
 enable_unit systemd-resolved.service
 enable_unit NetworkManager.service
+# Bluetooth daemon for the desktop's blueman; local radio only, opens no
+# network port, and stays off on hardware without an adapter.
+enable_unit bluetooth.service
+
+# --- Audio: PipeWire for every user -------------------------------------
+# Belt and suspenders. The pipewire/wireplumber packages already ship these
+# user units enabled (their postinst writes the /etc/systemd/user symlinks),
+# so normally these calls are idempotent no-ops. They are kept so the intent
+# is explicit and survives a future packaging change that stops
+# auto-enabling. NOTE: enabling is not what made audio work — the units were
+# enabled all along; the fix was installing dbus-user-session (see the
+# desktop package list) so the user session bus they connect to exists.
+enable_user_unit_global pipewire.socket
+enable_user_unit_global pipewire-pulse.socket
+enable_user_unit_global wireplumber.service
 
 # Performance (faster/lighter): compressed RAM swap and OOM protection so
 # low-memory machines stay responsive instead of freezing.
@@ -58,7 +86,10 @@ systemctl disable avahi-daemon.service 2>/dev/null || true
 systemctl disable avahi-daemon.socket 2>/dev/null || true
 systemctl disable cups.service 2>/dev/null || true
 systemctl disable cups-browsed.service 2>/dev/null || true
-systemctl disable bluetooth.service 2>/dev/null || true
+# NOTE: bluetooth is deliberately NOT disabled here. It is a local radio,
+# not a network-advertised service, and blueman in the tray is useless
+# without it; it is enabled above. (An earlier revision both enabled and
+# then disabled it here — a no-op that left Bluetooth off.)
 
 # Faster boot: NetworkManager-wait-online blocks boot until the network is
 # up (often many seconds) but nothing on a desktop needs to wait for it.

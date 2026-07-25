@@ -12,7 +12,17 @@ x11-xserver-utils
 lightdm
 lightdm-gtk-greeter
 light-locker
-dbus-x11
+# dbus-user-session, NOT dbus-x11. This is the actual reason audio was
+# dead: PipeWire/WirePlumber run under the systemd --user manager and
+# reach each other over the per-user session bus at $XDG_RUNTIME_DIR/bus,
+# which logind+pam_systemd only set up when dbus-user-session is
+# installed. With the legacy dbus-x11 instead, wireplumber.service dies
+# with "Failed to connect to session bus" and no audio nodes are ever
+# created — Debian bug #998167 / #1032351, and exactly our symptom. Their
+# enable symlinks were present all along (the packages ship them); the bus
+# they connect to was not. Debian's own XFCE desktop task ships
+# dbus-user-session; recommends being off is why we didn't get it.
+dbus-user-session
 polkitd
 pkexec
 mate-polkit
@@ -47,6 +57,18 @@ pavucontrol
 pipewire
 pipewire-pulse
 wireplumber
+# The pieces of a working audio stack that recommends-off would otherwise
+# drop. Native PipeWire/Pulse apps (Firefox, etc.) play through pipewire +
+# wireplumber alone, but these complete it:
+#   pipewire-alsa          — routes plain ALSA apps through PipeWire
+#   libspa-0.2-bluetooth   — Bluetooth audio (A2DP/HFP); pairs with the
+#                            bluez/blueman stack, without it a paired
+#                            headset connects but plays nothing
+#   rtkit                  — realtime scheduling so audio doesn't crackle
+#                            under load (wireplumber asks rtkit for it)
+pipewire-alsa
+libspa-0.2-bluetooth
+rtkit
 gvfs
 gvfs-backends
 xdg-user-dirs
@@ -79,6 +101,16 @@ fonts-dejavu
 ## Desktop polish — clipboard manager, night-light filter
 xfce4-clipman-plugin
 redshift-gtk
+
+## Bluetooth — the stack was missing entirely; headsets/mice are table
+## stakes on laptops. blueman is the tray/manager UI, bluez the daemon.
+## The service is enabled by the services hook; it does not listen on the
+## network.
+bluez
+blueman
+
+## A little flash — fast, pretty system-info in the terminal
+fastfetch
 
 ## Faster & lighter — compressed RAM swap + OOM protection on low-memory boxes
 zram-tools

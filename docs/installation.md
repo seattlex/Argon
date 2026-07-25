@@ -13,11 +13,19 @@ Never install from an image that fails verification.
 
 ## 2. Write it to a USB stick
 
+Argon ships a *hybrid* ISO: it must be written to the stick **byte for
+byte**, not extracted file-by-file.
+
 ```sh
 sudo dd if=argon-<version>-xfce-amd64.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
 (Replace `/dev/sdX` with the USB device, not a partition.)
+
+Graphically, **balenaEtcher** is always correct. If you use **Rufus**,
+choose **"Write in DD Image mode"** when it asks — "ISO Image mode" unpacks
+the image and rebuilds the boot menu, which is a common cause of a stick
+that reaches the boot menu and then fails to start.
 
 ## 3. Boot the live system
 
@@ -27,6 +35,14 @@ automatically, no login screen (just like Kali or Mint). Nothing touches
 your disks until you run the installer, and the installer is where you
 create your own account.
 
+> **UEFI machines: disable Secure Boot first** (firmware setup → Security).
+> Argon's kernel follows Kali and is not Microsoft-signed. With Secure
+> Boot enabled the firmware stops the USB stick with
+> **"Verification failed: (0x1A) Security Violation"** — which looks like
+> a corrupt download but isn't — and later refuses to boot the installed
+> system the same way. Signed-shim support is on the roadmap; see
+> [troubleshooting.md](troubleshooting.md) for the firmware steps.
+
 (If a login prompt ever does appear, the live account is `argon` /
 `argon`. Automatic screen-locking is disabled in the live session so you
 can't get locked out.)
@@ -35,14 +51,23 @@ The live session already runs with Argon defaults, so you can check the
 hardware works — Wi-Fi (with a randomized MAC), display, sound — before
 committing to an install.
 
+> **Boot didn't reach the desktop?** If you land at a `(initramfs)` prompt
+> or a black screen, pick **"Start Argon OS (verbose — troubleshoot boot)"**
+> from the boot menu to see the actual error, then see
+> [troubleshooting.md](troubleshooting.md).
+
 ## 4. Install
 
 Double-click the **Install Argon OS** icon on the desktop (or launch it
 from the menu, or the Welcome window). This starts the Calamares installer.
 
-* **Erase disk** is the guided path. It defaults to **Btrfs** and offers
-  **LUKS2 full-disk encryption** — just set a passphrase. Use a long
-  passphrase; it protects everything on the machine when powered off.
+* **Erase disk** is the guided path. It creates a small unencrypted
+  `/boot` plus the root filesystem (defaults to **Btrfs**), and offers
+  **LUKS2 encryption** for everything but `/boot` — just set a passphrase.
+  Use a long passphrase; it protects everything on the machine when
+  powered off. (`/boot` stays unencrypted so GRUB can start the system —
+  the same scheme Fedora and Ubuntu use; it contains only the kernel and
+  boot assets, no personal data.)
 * **Manual partitioning** supports Btrfs and EXT4, encrypted or not,
   and any layout you like. A 512 MB EFI system partition is required on
   UEFI machines.

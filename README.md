@@ -99,6 +99,11 @@ The live session boots **straight to the desktop**, no login screen and
 an **Install Argon OS** icon is right there on the desktop when you're
 ready. No prior Linux experience, no terminal, no Kali required.
 
+> **UEFI machines:** disable Secure Boot first, or the firmware stops the
+> USB with *"Verification failed: (0x1A) Security Violation"*. That message
+> means Secure Boot, not a bad download — details in the
+> [troubleshooting guide](docs/troubleshooting.md).
+
 - **New to Linux?** → [Getting Started guide](docs/getting-started.md)
 - **Detailed install** → [Installation guide](docs/installation.md)
 - **Verify your download** → [reproducible builds](docs/reproducible-builds.md#verifying-a-release-current-state)

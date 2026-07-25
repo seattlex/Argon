@@ -23,6 +23,15 @@ live-config
 live-config-systemd
 plymouth
 plymouth-themes
+# label.so — renders ALL text in script-based plymouth themes (Image.Text).
+# It is a separate package and only a Recommends, and recommends are
+# globally off. Without it Argon's theme still shows the logo but every
+# text element renders as nothing — including the LUKS passphrase prompt,
+# so an encrypted install boots into an invisible password prompt and
+# looks exactly like a hung/failed boot. fonts-dejavu-core provides the
+# font the plymouth initramfs hook copies in for label.so to use.
+plymouth-label
+fonts-dejavu-core
 
 ## Firmware (non-free-firmware area; needed for real hardware support)
 firmware-linux-free
@@ -70,6 +79,10 @@ rsync
 unzip
 p7zip-full
 cryptsetup
+# Unlocks the encrypted root from the initramfs at boot. It is only a
+# Recommends of cryptsetup (and recommends are globally off), so without
+# listing it an encrypted install would finish fine and then never boot.
+cryptsetup-initramfs
 btrfs-progs
 dosfstools
 gparted

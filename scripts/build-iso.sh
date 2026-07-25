@@ -65,8 +65,31 @@ mkdir -p "$BUILD_DIR/config"
 # Layer 1: common configuration
 cp -a "$BUILD_DIR/argon-config/common/." "$BUILD_DIR/config/"
 
-# Layer 2: variant overlay (may override common files)
+# Layer 2: parent variant, if this variant declares one. A variant with a
+# `parent` file (e.g. variant-security's contains "xfce") is an overlay on
+# that variant rather than a sibling: the parent's desktop, theming and
+# package lists apply first, then this variant adds to or overrides them.
+# One level only — a parent may not itself have a parent.
+if [ -f "$VARIANT_DIR/parent" ]; then
+    PARENT_VARIANT="$(tr -d '[:space:]' < "$VARIANT_DIR/parent")"
+    PARENT_DIR="$BUILD_DIR/argon-config/variant-$PARENT_VARIANT"
+    if [ ! -d "$PARENT_DIR" ]; then
+        echo "ERROR: variant '$VARIANT' declares parent '$PARENT_VARIANT'," >&2
+        echo "       but $PARENT_DIR does not exist" >&2
+        exit 1
+    fi
+    if [ -f "$PARENT_DIR/parent" ]; then
+        echo "ERROR: parent variant '$PARENT_VARIANT' has a parent of its" >&2
+        echo "       own — only one level of variant nesting is supported" >&2
+        exit 1
+    fi
+    cp -a "$PARENT_DIR/." "$BUILD_DIR/config/"
+fi
+
+# Layer 3: variant overlay (may override common/parent files)
 cp -a "$VARIANT_DIR/." "$BUILD_DIR/config/"
+# The `parent` marker is build machinery, not live-build configuration
+rm -f "$BUILD_DIR/config/parent"
 
 CHROOT_INC="$BUILD_DIR/config/includes.chroot"
 
@@ -153,6 +176,84 @@ ARGON_VARIANT="$VARIANT" ARGON_VERSION="$VERSION" lb config
 
 echo "==> lb build (this takes a while)"
 lb build
+
+# Verify the initramfs that actually ships.
+#
+# This cannot be done from a chroot hook. live-build regenerates the
+# initramfs in `lb chroot_hacks`, a build *stage* that runs after every
+# config/hooks/* hook has finished — so the in-chroot check (hook 9999)
+# inspects an initrd that is subsequently rebuilt. The file live-build
+# copies into binary/live/ is the one users boot, and it is the only
+# meaningful thing to assert on.
+#
+# What is being guarded: without USB/vfat/squashfs drivers, live-boot
+# scans for /live/filesystem.squashfs for 60 seconds and then panics into
+# a BusyBox "(initramfs)" prompt. That is invisible in a VM and only shows
+# up when someone boots a physical stick.
+echo "==> Verifying the shipped initramfs"
+SHIPPED_INITRD="$(find "$BUILD_DIR/binary" -maxdepth 2 -name 'initrd*' -type f 2>/dev/null | sort | head -n1 || true)"
+if [ -z "$SHIPPED_INITRD" ]; then
+    echo "ERROR: no initramfs found under $BUILD_DIR/binary — the image would" >&2
+    echo "       not be bootable at all" >&2
+    exit 1
+fi
+if command -v lsinitramfs >/dev/null 2>&1; then
+    # Reading the initramfs needs the matching decompressor (zstd by
+    # default on Debian/Kali). It is only a Recommends of
+    # initramfs-tools-core, so on a minimal build host lsinitramfs fails
+    # with a bare "unmkinitramfs: zstd failed" — surface something the
+    # reader can act on instead.
+    if ! INITRD_CONTENTS="$(lsinitramfs "$SHIPPED_INITRD" 2>&1)"; then
+        echo "ERROR: could not read $SHIPPED_INITRD" >&2
+        echo "       lsinitramfs said: $INITRD_CONTENTS" >&2
+        echo "       Install the decompressor it needs (zstd, xz-utils, gzip)" >&2
+        echo "       on the build host and re-run." >&2
+        exit 1
+    fi
+    # Feed grep with a here-string, never a pipe.
+    #
+    # `printf '%s\n' "$list" | grep -q PATTERN` is actively wrong under
+    # `set -o pipefail`, which this script uses: grep -q exits the moment it
+    # matches, printf is killed by SIGPIPE (exit 141) partway through the
+    # ~3700-line listing, and pipefail then reports 141 as the pipeline's
+    # status. `if ! pipeline` therefore reads a *successful match* as a
+    # miss. That is not hypothetical — it made an earlier revision of this
+    # check report all six modules missing from an initramfs that in fact
+    # contained 986 of them. It also hides in testing, because a short
+    # listing fits in the pipe buffer and printf finishes before grep exits.
+    MISSING_MODULES=""
+    for mod in usb-storage uas xhci_pci squashfs overlay vfat; do
+        # modprobe knows xhci_pci; the file on disk is xhci-pci.ko. Match
+        # either separator, and any compression suffix (.ko.xz, .ko.zst).
+        pattern="$(printf '%s' "$mod" | sed 's/[-_]/[-_]/g')"
+        if ! grep -qE "/${pattern}\.ko(\.[a-z0-9]+)?$" <<<"$INITRD_CONTENTS"
+        then
+            MISSING_MODULES="$MISSING_MODULES $mod"
+        fi
+    done
+    if [ -n "$MISSING_MODULES" ]; then
+        echo "ERROR: the shipped initramfs ($SHIPPED_INITRD) is missing:" >&2
+        echo "      $MISSING_MODULES" >&2
+        echo "       This image would drop to a BusyBox (initramfs) prompt when" >&2
+        echo "       booted from USB. Refusing to publish it." >&2
+        # Evidence, so a future failure can be told apart from a bug in this
+        # check. grep -m stops after N matches instead of piping into head,
+        # which would reintroduce exactly the SIGPIPE problem described above.
+        echo "       evidence:" >&2
+        printf '         entries listed:       %s\n' \
+            "$(wc -l <<<"$INITRD_CONTENTS")" >&2
+        printf '         entries matching .ko: %s\n' \
+            "$(grep -c '\.ko' <<<"$INITRD_CONTENTS" || true)" >&2
+        echo "         sample module paths:" >&2
+        grep -m5 '/modules/' <<<"$INITRD_CONTENTS" \
+            | sed 's/^/           /' >&2 || true
+        exit 1
+    fi
+    echo "    verified: usb-storage uas xhci_pci squashfs overlay vfat"
+else
+    echo "    WARNING: lsinitramfs not found, so the shipped initramfs could" >&2
+    echo "    NOT be verified. Install initramfs-tools to enable this check." >&2
+fi
 
 ISO_FILE="$(find "$BUILD_DIR" -maxdepth 1 -name 'argon-*.iso' | sort | head -n1)"
 if [ -z "$ISO_FILE" ]; then

@@ -6,6 +6,135 @@ release tags.
 
 ## [Unreleased]
 
+### Fixed — no audio at all (missing `dbus-user-session`)
+- **The machine was silent.** PipeWire and WirePlumber were installed and
+  their user services were enabled — but `wireplumber.service` died at
+  start with *"Failed to connect to session bus"*, so no audio nodes were
+  ever created. The cause was a missing **`dbus-user-session`**: PipeWire
+  and WirePlumber run under the systemd `--user` manager and reach each
+  other over the per-user session bus at `$XDG_RUNTIME_DIR/bus`, which
+  `logind`/`pam_systemd` only set up when that package is installed. Argon
+  shipped the legacy **`dbus-x11`** instead (recommends are off, so the
+  desktop task's `dbus-user-session` never came in), which starts an ad-hoc
+  bus per X display and leaves the `--user` services unreachable. This is
+  Debian bug #998167 / #1032351 exactly. Replaced `dbus-x11` with
+  `dbus-user-session` (what Debian's own XFCE task ships).
+- Added the audio-stack pieces that `--apt-recommends false` also dropped:
+  `rtkit` (glitch-free realtime scheduling) and `libspa-0.2-bluetooth` —
+  without which a paired Bluetooth headset connects but plays nothing.
+  (`pipewire-alsa` turned out to already be pulled in; listing it is
+  harmless and explicit.)
+- Belt-and-suspenders `systemctl --global enable` of the PipeWire user
+  units in the service hook. The packages already ship them enabled, so
+  this is normally a no-op; it guards against a future packaging change.
+- **Bluetooth was enabled and then immediately disabled** in the same hook
+  (the new `enable` line met a pre-existing `disable` line left from when
+  Bluetooth wasn't installed), so it shipped off. Removed the stale
+  disable; Bluetooth is a local radio, not a network-advertised service.
+
+### Fixed — encrypted installs looked like a hung boot (invisible passphrase prompt)
+- **The LUKS passphrase prompt rendered invisibly.** Every text element in
+  Argon's plymouth splash goes through the theme's `Image.Text()`, which
+  needs plymouth's *label* plugin — a separate package
+  (`plymouth-label`) that is only a Recommends, and recommends are
+  globally off. The splash showed the logo but no text at all, so an
+  encrypted install booted into an *invisible* password prompt and sat
+  there — read as "encryption is incompatible / boot fails", while
+  unencrypted installs (which never prompt) booted fine. Added
+  `plymouth-label` (+ `fonts-dejavu-core` for the font the initramfs hook
+  copies in). The Calamares module chain itself was verified against the
+  upstream source and is correct for the unencrypted-`/boot` layout
+  (root's crypttab entry gets `none` → initramfs prompts).
+- Troubleshooting guide now covers encrypted boots: the passphrase screen
+  is expected at every boot, type-blind + Enter works, and **Esc** always
+  reveals the text prompt beneath the splash.
+
+### Fixed — Secure Boot failure now named and documented
+- **"Verification failed: (0x1A) Security Violation"** when booting the
+  USB on UEFI machines is Secure Boot rejecting Argon's (Kali-derived,
+  unsigned) boot chain — it reads like a corrupt ISO and isn't. The exact
+  message is now in the README, install guide and troubleshooting guide
+  with per-vendor firmware steps (incl. MSI) and the BitLocker caveat for
+  dual-booters. A signed shim stays on the roadmap.
+
+### Added — Argon Security Edition (build variant)
+- New `security` build variant: the identical privacy-hardened OS plus
+  Kali's standard tool selection (`kali-linux-default`) preinstalled,
+  unmodified from the same Kali repositories. Argon's no-listening-services
+  rule still applies — tools are installed, nothing starts or listens.
+- Build variants can now layer on a parent (`variant-security/parent` →
+  `xfce`), so editions share the desktop instead of duplicating it; lint
+  assembles the security config to keep the layering honest.
+- CI publishes each edition under its own rolling asset name, and splits
+  images over GitHub's 2 GiB release-asset cap into `.part*` files with
+  reassembly instructions in the release notes.
+
+### Changed — minimal panel + QOL
+- The four coloured lock/logout/restart/shutdown buttons in the panel are
+  now a single neutral session button (its dialog and the Whisker menu
+  carry the same actions) — the loudest element of the default desktop,
+  gone.
+- Bluetooth finally works out of the box: `bluez` + `blueman` (tray UI),
+  service enabled; local radio only, no network listener.
+- `fastfetch` ships for a pretty terminal system summary.
+
+### Fixed — live boot dropping to a BusyBox `(initramfs)` prompt
+- **The splash ran halfway, then the machine landed in a BusyBox shell.**
+  `live-boot` scans for `/live/filesystem.squashfs` for 60 seconds and then
+  panics into `(initramfs)`; it never found the medium. This reproduced on
+  physical USB boots while working every time in a VM, because a VM's disk
+  uses drivers that are present in any initramfs — the USB path needs
+  drivers that were not guaranteed to be there.
+- The image now **pins `MODULES=most` and forces an explicit boot-media
+  driver set into the initramfs** (`xhci`/`ehci`/`ohci`/`uhci`,
+  `usb-storage`, `uas`, `sd_mod`, `sr_mod`/`isofs`, `squashfs`, `loop`,
+  `overlay`, `vfat` + NLS codepages, `ahci`, `nvme`, virtio). `uas` and the
+  `vfat`/NLS set are the load-bearing additions: most USB 3 sticks bind to
+  `uas` rather than `usb-storage`, and a stick written by Rufus in "ISO
+  mode" holds the live files on FAT32, which is visible but unmountable
+  without them.
+- **The config alone would have done nothing**, which is the actual trap
+  here: live-build installs the kernel (generating the initramfs) *before*
+  it copies `includes.chroot` in, so the new settings landed on disk after
+  the initrd that ships in the image was already built. A new chroot hook
+  regenerates the initramfs after the includes are in place.
+- A second hook **verifies the shipped initrd and fails the build** if
+  `usb-storage`, `uas`, `xhci_pci`, `squashfs`, `overlay` or `vfat` are
+  missing — this class of bug is invisible until someone boots a physical
+  stick, so it is now caught in CI instead of by a user. It runs at `9999`
+  rather than next to the rebuild, because live-build injects its own hooks
+  into the same directory (`1010-enable-cryptsetup` regenerates the
+  initramfs, and the built-ins run up to `9020`): checking any earlier
+  validates an initrd that is then replaced before the image is assembled.
+- Added a **"verbose — troubleshoot boot"** entry to both the BIOS and UEFI
+  menus (`debug=1`, no `quiet splash`). The default entry hid the panic
+  message behind Plymouth, which is why the failure looked like a silent
+  crash with nothing to report.
+- New [troubleshooting guide](docs/troubleshooting.md): how to read the
+  `(initramfs)` prompt, and correct USB-writing guidance (Etcher, or Rufus
+  in **DD mode** — ISO mode rebuilds the boot menu and cannot hold files
+  over 4 GB).
+
+### Fixed — bootloader made robust across the whole install matrix
+- **`grub-install --target=i386-pc … returned error code 1`.** The erase-disk
+  layout now creates a separate **unencrypted 1 GiB ext4 `/boot`**
+  (`partitionLayout` + `noEncrypt`, verified against the Calamares source)
+  ahead of the root filesystem. GRUB therefore never has to read an
+  encrypted or btrfs volume, which makes the bootloader step behave the
+  same on BIOS and UEFI, plain and LUKS installs — and it is the only
+  layout under which encrypted installs can boot at all (GRUB cannot
+  unlock LUKS2/argon2id, so an encrypted `/boot` is unbootable even when
+  the install succeeds).
+- **Encrypted installs could never unlock at boot**: added
+  `cryptsetup-initramfs` (only a Recommends of cryptsetup, and recommends
+  are globally off) so the initramfs can actually open the LUKS root.
+- Ship an explicit Calamares `mount.conf` (upstream defaults plus
+  `/dev/pts`) so the target chroot that runs `grub-install`,
+  `grub-mkconfig` and `update-initramfs` never depends on
+  package-shipped defaults.
+- Documented that UEFI Secure Boot must be disabled (Kali kernels are
+  unsigned); noted the unencrypted-`/boot` scheme in the install guide.
+
 ### Fixed — installer bootloader + wallpaper (second boot pass)
 - **Install failed at the end: "bootloader/main.py raised an exception".**
   Calamares' bootloader module reads the GRUB binary names and EFI id

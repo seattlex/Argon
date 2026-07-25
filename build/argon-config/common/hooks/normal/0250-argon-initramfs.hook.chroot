@@ -1,0 +1,43 @@
+#!/bin/sh
+# Argon OS — rebuild the initramfs so the boot-media drivers are actually in it.
+#
+# Ordering matters here. live-build installs the kernel during
+# chroot_install-packages, which generates an initramfs immediately, and
+# only copies includes.chroot in afterwards. So /etc/initramfs-tools/modules
+# and conf.d/argon-boot.conf land on disk AFTER the initrd that live-build
+# will ship has already been built — they have no effect until something
+# regenerates it. Hooks run after includes, so this is that something.
+#
+# Without this hook the initramfs config is inert and the image boots only
+# on hardware whose drivers happened to be in the default initrd.
+#
+# The check that this actually worked lives in 9999-argon-verify-initramfs,
+# deliberately not here: live-build ships its own hooks (1010-enable-cryptsetup
+# among them) that regenerate the initramfs after this one runs, so a check
+# here would validate an initrd that is subsequently replaced.
+set -e
+
+echo "argon: rebuilding initramfs with boot-media drivers"
+
+built_any=0
+
+for kdir in /lib/modules/*/; do
+    kver="${kdir%/}"
+    kver="${kver##*/}"
+
+    # Directories under /lib/modules without a matching kernel image are
+    # leftovers, not something we can build an initramfs for.
+    [ -e "/boot/vmlinuz-${kver}" ] || continue
+
+    if [ -e "/boot/initrd.img-${kver}" ]; then
+        update-initramfs -u -k "${kver}"
+    else
+        update-initramfs -c -k "${kver}"
+    fi
+    built_any=1
+done
+
+if [ "${built_any}" -eq 0 ]; then
+    echo "argon: ERROR no kernel found to build an initramfs for" >&2
+    exit 1
+fi

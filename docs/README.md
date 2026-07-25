@@ -5,6 +5,7 @@
 | [getting-started.md](getting-started.md) | **New here? Start with this.** Download → USB → install, no terminal |
 | [building.md](building.md) | Building the ISO and the Argon packages from source |
 | [installation.md](installation.md) | Installing Argon (live session, Calamares, disk encryption) |
+| [troubleshooting.md](troubleshooting.md) | Boot and install problems: `(initramfs)` prompt, black screen, USB sticks |
 | [applications.md](applications.md) | Argon Software (the app store) and Argon Welcome |
 | [audio-production.md](audio-production.md) | Voicemeeter, FL Studio and VST plugins on Argon (PipeWire) |
 | [hardening.md](hardening.md) | Security defaults: what is enabled, why, and how to adjust it |
