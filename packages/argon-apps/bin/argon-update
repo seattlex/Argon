@@ -1,0 +1,240 @@
+#!/usr/bin/python3
+# Argon Update — one-click system updates for Argon OS.
+#
+# Argon is a rolling release built on Kali: "updating" is
+# `apt-get update && apt-get full-upgrade`. Security fixes already install
+# themselves (unattended-upgrades), so this is for the rest — the feature
+# updates and new app versions — without anyone needing a terminal.
+#
+# It does two things, in one window:
+#   * Check   — refresh the package lists and show what would change.
+#   * Update  — apply it, streaming apt's output live.
+# Both go through the same polkit-authenticated helper Argon Software uses
+# (org.argon.pkg-helper), so there is one audited privilege boundary.
+#
+# Env:
+#   ARGON_PKG_HELPER=/path   override the helper (testing)
+#   ARGON_UPDATE_SIMULATE=1  pass --simulate (apt -s); changes nothing
+
+import os
+import shutil
+import subprocess
+import sys
+import threading
+
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib, Pango  # noqa: E402
+
+APP_ID = "org.argon.Update"
+HELPER = "/usr/libexec/argon/argon-pkg-helper"
+SIMULATE = os.environ.get("ARGON_UPDATE_SIMULATE") == "1"
+
+
+def helper_command(action, simulate=False):
+    # Helper CLI: [pkexec] HELPER [--simulate] ACTION — the --simulate flag
+    # must come before the action, which is what the helper parses as $1.
+    cmd = []
+    if os.geteuid() != 0:
+        cmd.append("pkexec")
+    cmd.append(os.environ.get("ARGON_PKG_HELPER", HELPER))
+    if simulate or SIMULATE:
+        cmd.append("--simulate")
+    cmd.append(action)
+    return cmd
+
+
+def count_upgradable():
+    """How many packages have an upgrade pending. -1 if it can't be told."""
+    apt = shutil.which("apt-get") or shutil.which("apt")
+    if apt is None:
+        return -1
+    try:
+        out = subprocess.run(
+            ["apt-get", "-s", "full-upgrade"],
+            capture_output=True, text=True, check=False).stdout
+    except OSError:
+        return -1
+    for line in out.splitlines():
+        # "N upgraded, N newly installed, N to remove and N not upgraded."
+        if "upgraded," in line and "newly installed" in line:
+            try:
+                return int(line.split()[0])
+            except (ValueError, IndexError):
+                return -1
+    return -1
+
+
+class UpdateWindow(Gtk.ApplicationWindow):
+    def __init__(self, app):
+        super().__init__(application=app, title="Update Argon")
+        self.set_default_size(640, 520)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.op_running = False
+
+        header = Gtk.HeaderBar(show_close_button=True, title="Update Argon")
+        self.set_titlebar(header)
+
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+
+        top = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        top.set_margin_top(28)
+        top.set_margin_bottom(12)
+        top.set_margin_start(32)
+        top.set_margin_end(32)
+
+        logo = Gtk.Image.new_from_icon_name(
+            "system-software-update", Gtk.IconSize.DIALOG)
+        logo.set_pixel_size(72)
+        top.pack_start(logo, False, False, 0)
+
+        title = Gtk.Label()
+        title.set_markup(
+            "<span size='x-large' weight='bold'>Keep Argon up to date</span>")
+        top.pack_start(title, False, False, 0)
+
+        self.status = Gtk.Label(
+            label="Security fixes install themselves. Use this for everything "
+                  "else — new features and app versions.")
+        self.status.set_justify(Gtk.Justification.CENTER)
+        self.status.set_line_wrap(True)
+        self.status.get_style_context().add_class("dim-label")
+        top.pack_start(self.status, False, False, 0)
+
+        btns = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12,
+                       halign=Gtk.Align.CENTER)
+        self.check_btn = Gtk.Button(label="Check for updates")
+        self.check_btn.connect("clicked", lambda _b: self._start("check"))
+        self.update_btn = Gtk.Button(label="Update now")
+        self.update_btn.get_style_context().add_class("suggested-action")
+        self.update_btn.connect("clicked", lambda _b: self._start("upgrade"))
+        self.update_btn.set_sensitive(False)
+        btns.pack_start(self.check_btn, False, False, 0)
+        btns.pack_start(self.update_btn, False, False, 0)
+        top.pack_start(btns, False, False, 4)
+
+        self.spinner = Gtk.Spinner()
+        top.pack_start(self.spinner, False, False, 0)
+
+        outer.pack_start(top, False, False, 0)
+
+        # Live apt output, hidden until something runs.
+        self.revealer = Gtk.Revealer()
+        self.revealer.set_transition_type(
+            Gtk.RevealerTransitionType.SLIDE_DOWN)
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_min_content_height(220)
+        self.logview = Gtk.TextView(editable=False, cursor_visible=False,
+                                    monospace=True)
+        self.logview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.logview.set_left_margin(8)
+        self.logview.set_right_margin(8)
+        scroll.add(self.logview)
+        self.revealer.add(scroll)
+        outer.pack_start(self.revealer, True, True, 0)
+
+        self.add(outer)
+        self.show_all()
+
+        if SIMULATE:
+            self.status.set_text("Simulation mode — nothing will be changed.")
+
+    # --- run the helper ----------------------------------------------------
+    def _start(self, action):
+        if self.op_running:
+            return
+        self.op_running = True
+        self.check_btn.set_sensitive(False)
+        self.update_btn.set_sensitive(False)
+        self.spinner.start()
+        self.revealer.set_reveal_child(True)
+        self._log_clear()
+        if action == "check":
+            self.status.set_text("Checking for updates…")
+            # Dry-run upgrade through the helper: it still runs `apt-get
+            # update` as root to refresh the lists, then simulates the
+            # upgrade so nothing is actually changed.
+            cmd = helper_command("upgrade", simulate=True)
+        else:
+            self.status.set_text("Updating… this can take a while.")
+            cmd = helper_command("upgrade")
+        threading.Thread(
+            target=self._run, args=(action, cmd), daemon=True).start()
+
+    def _run(self, action, cmd):
+        try:
+            proc = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                text=True, bufsize=1)
+            for line in proc.stdout:
+                GLib.idle_add(self._log_line, line)
+            code = proc.wait()
+        except OSError as exc:
+            GLib.idle_add(self._log_line, "error: {}\n".format(exc))
+            code = 1
+        GLib.idle_add(self._finish, action, code)
+
+    def _finish(self, action, code):
+        self.op_running = False
+        self.spinner.stop()
+        self.check_btn.set_sensitive(True)
+        if code != 0:
+            # pkexec returns 126/127 when the user dismisses the password
+            # dialog — report that plainly rather than as a scary failure.
+            if action != "check" and code in (126, 127):
+                self.status.set_text("Update cancelled.")
+            else:
+                self.status.set_text("Something went wrong — see the log below.")
+            self.update_btn.set_sensitive(action == "check")
+            return False
+
+        pending = count_upgradable()
+        if action == "check":
+            if pending == 0:
+                self.status.set_text("Argon is up to date. 🎉")
+                self.update_btn.set_sensitive(False)
+            elif pending > 0:
+                self.status.set_text(
+                    "{} update{} available. Click “Update now”.".format(
+                        pending, "" if pending == 1 else "s"))
+                self.update_btn.set_sensitive(True)
+            else:
+                self.status.set_text(
+                    "Update check finished — review the list below.")
+                self.update_btn.set_sensitive(True)
+        else:
+            self.status.set_text("Argon is up to date. 🎉")
+            self.update_btn.set_sensitive(False)
+            self._log_line("\nDone.\n")
+        return False
+
+    # --- log pane ----------------------------------------------------------
+    def _log_clear(self):
+        self.logview.get_buffer().set_text("")
+
+    def _log_line(self, text):
+        buf = self.logview.get_buffer()
+        buf.insert(buf.get_end_iter(), text)
+        mark = buf.create_mark(None, buf.get_end_iter(), False)
+        self.logview.scroll_mark_onscreen(mark)
+        buf.delete_mark(mark)
+        return False
+
+
+class UpdateApp(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id=APP_ID)
+
+    def do_activate(self):
+        win = self.get_active_window()
+        if win is None:
+            win = UpdateWindow(self)
+        win.present()
+
+
+if __name__ == "__main__":
+    if shutil.which("apt-get") is None:
+        print("argon-update requires a Debian-based system", file=sys.stderr)
+        sys.exit(1)
+    sys.exit(UpdateApp().run(sys.argv))

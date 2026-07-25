@@ -97,6 +97,7 @@ Argon isn't a re-skin — these components are original to the project:
 
 - ✅ **Argon Welcome** — first-login greeter (install, get software, review privacy defaults)
 - ✅ **Argon Software** — graphical app store with curated categories and one-click, polkit-authenticated installs
+- ✅ **Argon Update** — one-click system updates (check + apply, no terminal)
 - ✅ **Argon Virtual Audio** — Voicemeeter-style virtual audio cables on PipeWire
 - ✅ **Argon branding** — logo, wallpapers, Plymouth boot theme, branded GRUB/isolinux boot menu
 - ✅ **Installer customization** — Calamares with a LUKS2 + Btrfs guided default and a sudo-only, no-root user model

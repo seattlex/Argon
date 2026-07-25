@@ -7,8 +7,8 @@
   <vendor_url>https://github.com/seattlex/argon</vendor_url>
 
   <action id="org.argon.pkg-helper">
-    <description>Install or remove software</description>
-    <message>Authentication is required to install or remove software</message>
+    <description>Install, remove or update software</description>
+    <message>Authentication is required to change installed software</message>
     <icon_name>system-software-install</icon_name>
     <defaults>
       <!-- Always require an administrator password; keep it for the

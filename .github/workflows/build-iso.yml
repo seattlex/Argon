@@ -35,43 +35,70 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # live-build needs to create chroots and mount pseudo-filesystems
-    container:
-      image: kalilinux/kali-rolling
-      options: --privileged
     steps:
-      - name: Install build dependencies
+      # The build runs on the HOST (not inside a `container:`) so this step
+      # can reach and delete the host's preinstalled toolchains. A
+      # GitHub-hosted runner ships ~30 GB of Android SDK, .NET, GHC, and the
+      # hosted-tool cache on the root filesystem, leaving only ~21 GB free —
+      # not enough for the Security Edition (kali-linux-default) live-build,
+      # which died mid-run with "No space left on device". None of it is
+      # used by an apt/live-build image build, so remove it up front.
+      - name: Free up disk space
         run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            live-build git ca-certificates xz-utils \
-            build-essential debhelper librsvg2-bin \
-            initramfs-tools zstd
-          # initramfs-tools provides lsinitramfs, which build-iso.sh uses to
-          # assert the shipped initramfs can actually reach the live medium.
-          # The container has no kernel, so it is not installed by default —
-          # without it that check downgrades to a warning and stops gating.
-          # zstd is what actually decompresses the initramfs: it is only a
-          # Recommends of initramfs-tools-core, and this install runs with
-          # --no-install-recommends, so lsinitramfs fails without it.
+          echo "Before:"; df -h /
+          sudo rm -rf \
+            /usr/local/lib/android \
+            /usr/share/dotnet \
+            /opt/ghc /usr/local/.ghcup \
+            /usr/local/share/boost \
+            /opt/hostedtoolcache \
+            /usr/lib/jvm \
+            /usr/local/share/powershell \
+            /usr/local/lib/node_modules || true
+          sudo docker image prune -af || true
+          sudo swapoff -a || true
+          echo "After:"; df -h /
 
       - uses: actions/checkout@v4
 
       - name: Determine version string
         id: version
         run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
             echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
           else
             echo "version=rolling-$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
           fi
 
+      # live-build needs a Kali userland and privileges to build chroots and
+      # mount pseudo-filesystems, so run it in a Kali container we launch
+      # ourselves (rather than a job-level `container:`, which would run this
+      # step inside the container and block the disk-cleanup above).
       - name: Build ISO
+        env:
+          VARIANT: ${{ github.event.inputs.variant || 'xfce' }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          ./scripts/build-iso.sh \
-            --variant "${{ github.event.inputs.variant || 'xfce' }}" \
-            --version "${{ steps.version.outputs.version }}"
+          docker run --rm --privileged \
+            -v "$GITHUB_WORKSPACE":/work -w /work \
+            -e VARIANT -e VERSION \
+            kalilinux/kali-rolling bash -euxo pipefail -c '
+              apt-get update
+              apt-get install -y --no-install-recommends \
+                live-build git ca-certificates xz-utils \
+                build-essential debhelper librsvg2-bin \
+                initramfs-tools zstd
+              # initramfs-tools+zstd give lsinitramfs its decompressor so
+              # build-iso.sh can verify the shipped initramfs (recommends off,
+              # and the container has no kernel, so neither is pulled in
+              # otherwise).
+              git config --global --add safe.directory /work
+              ./scripts/build-iso.sh --variant "$VARIANT" --version "$VERSION"
+            '
+          # Files written inside the container are owned by root; hand them
+          # back to the runner user so the release/publish steps below (mv,
+          # rm, split, action uploads) can operate on iso/ and build/.
+          sudo chown -R "$(id -u):$(id -g)" iso build 2>/dev/null || true
 
       - name: Upload build log on failure
         if: failure()
@@ -100,7 +127,8 @@ jobs:
         env:
           SIGNING_KEY: ${{ secrets.ARGON_SIGNING_KEY_ASC }}
         run: |
-          apt-get install -y --no-install-recommends gnupg
+          # gnupg is preinstalled on the ubuntu-latest host (the build no
+          # longer runs in a bare container).
           printf '%s' "$SIGNING_KEY" | gpg --batch --import
 
       - name: Sign release artifacts

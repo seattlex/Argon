@@ -7,6 +7,7 @@
 | [installation.md](installation.md) | Installing Argon (live session, Calamares, disk encryption) |
 | [troubleshooting.md](troubleshooting.md) | Boot and install problems: `(initramfs)` prompt, black screen, USB sticks |
 | [applications.md](applications.md) | Argon Software (the app store) and Argon Welcome |
+| [updates.md](updates.md) | Keeping Argon current (automatic security fixes + one-click updates) |
 | [audio-production.md](audio-production.md) | Voicemeeter, FL Studio and VST plugins on Argon (PipeWire) |
 | [hardening.md](hardening.md) | Security defaults: what is enabled, why, and how to adjust it |
 | [privacy.md](privacy.md) | Privacy defaults: DNS, MAC randomization, browser, time sync |

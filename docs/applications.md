@@ -46,12 +46,25 @@ it). It offers the handful of things a new user actually wants:
 * **Install Argon OS** — shown only in the live session, launches the
   Calamares installer.
 * **Get Software** — opens Argon Software.
+* **Update Argon** — shown only on an installed system, opens Argon Update.
 * **Your Privacy Defaults** — a plain-language list of what's already
   protecting the user (firewall, encrypted DNS, MAC randomization, …).
 * **Documentation** and **Community & Source Code** links.
 
 Run `argon-welcome` any time to reopen it; `--autostart` makes it exit
 silently if the user turned it off.
+
+## Argon Update
+
+A one-window updater for the rolling system (menu → *System*, or the
+**Update Argon** button on the greeter). **Check for updates** runs a
+dry-run so you can see what would change; **Update now** applies it, with
+apt's output streaming live. It calls the same polkit-authenticated
+`argon-pkg-helper` as Argon Software (via its `upgrade` action —
+`apt-get update && apt-get full-upgrade`), so there is one audited
+privilege boundary and no terminal. Security fixes still land on their own
+through unattended-upgrades; this is for the feature and app updates that
+are otherwise held back. See [updates.md](updates.md).
 
 ## Argon Virtual Audio
 

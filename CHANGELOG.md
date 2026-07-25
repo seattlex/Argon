@@ -6,6 +6,30 @@ release tags.
 
 ## [Unreleased]
 
+### Added — Argon Update (one-click updates for existing installs)
+- New **Argon Update** app (menu → System, and a button on Argon Welcome):
+  **Check for updates** then **Update now**, with apt's progress streaming
+  live in the window. No terminal. It runs
+  `apt-get update && apt-get full-upgrade` through the *same*
+  polkit-authenticated helper Argon Software already uses — the helper
+  gained an `upgrade` action (no package arguments), so there is still one
+  audited privilege boundary. Security fixes keep installing themselves via
+  unattended-upgrades; this covers the feature/app updates that are held
+  back so the system never changes mid-session.
+- New [updates guide](docs/updates.md) explaining the rolling model,
+  the one-click flow, and the `apt full-upgrade` terminal equivalent.
+
+### Fixed — Security Edition CI build ran the runner out of disk
+- The Security Edition build kept dying with **"No space left on device"**
+  (confirmed from the runner's own crash trace). A GitHub-hosted runner
+  only leaves ~21 GB free on `/`, and `kali-linux-default`'s live-build
+  needs more. The job ran *inside* a Kali `container:`, so it couldn't
+  reach the host's ~30 GB of preinstalled toolchains to delete them. The
+  build now runs on the host (freeing Android SDK, .NET, GHC, the
+  hosted-tool cache, etc. first) and launches Kali via `docker run
+  --privileged` itself — same build, ~30 GB more scratch space. Root-owned
+  build outputs are chowned back so the release/publish steps still work.
+
 ### Fixed — no audio at all (missing `dbus-user-session`)
 - **The machine was silent.** PipeWire and WirePlumber were installed and
   their user services were enabled — but `wireplumber.service` died at

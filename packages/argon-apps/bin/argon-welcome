@@ -107,6 +107,13 @@ class WelcomeWindow(Gtk.ApplicationWindow):
             "system-software-install", "Get Software",
             "Browse and install curated apps — no terminal needed",
             lambda _b: self._spawn(["argon-software"])))
+        # Nothing to update in the live session (it's read-only); only offer
+        # it on an installed system.
+        if not is_live_session():
+            buttons.append(self._action_button(
+                "system-software-update", "Update Argon",
+                "Get the latest Argon and application updates",
+                lambda _b: self._spawn(["argon-update"])))
         buttons.append(self._action_button(
             "security-high", "Your Privacy Defaults",
             "See what Argon already protects you from",
