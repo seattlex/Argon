@@ -46,11 +46,14 @@ jobs:
           apt-get install -y --no-install-recommends \
             live-build git ca-certificates xz-utils \
             build-essential debhelper librsvg2-bin \
-            initramfs-tools
+            initramfs-tools zstd
           # initramfs-tools provides lsinitramfs, which build-iso.sh uses to
           # assert the shipped initramfs can actually reach the live medium.
           # The container has no kernel, so it is not installed by default —
           # without it that check downgrades to a warning and stops gating.
+          # zstd is what actually decompresses the initramfs: it is only a
+          # Recommends of initramfs-tools-core, and this install runs with
+          # --no-install-recommends, so lsinitramfs fails without it.
 
       - uses: actions/checkout@v4
 
@@ -72,6 +75,11 @@ jobs:
 
       - name: Upload build log on failure
         if: failure()
+        # Never let a failed log upload add a second, unrelated error on top
+        # of the real one. The artifact store is small and quota-limited, and
+        # a "storage quota has been hit" message here obscures the actual
+        # build failure this step exists to help diagnose.
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: build-log

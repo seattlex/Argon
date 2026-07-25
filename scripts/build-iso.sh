@@ -175,7 +175,18 @@ if [ -z "$SHIPPED_INITRD" ]; then
     exit 1
 fi
 if command -v lsinitramfs >/dev/null 2>&1; then
-    INITRD_CONTENTS="$(lsinitramfs "$SHIPPED_INITRD")"
+    # Reading the initramfs needs the matching decompressor (zstd by
+    # default on Debian/Kali). It is only a Recommends of
+    # initramfs-tools-core, so on a minimal build host lsinitramfs fails
+    # with a bare "unmkinitramfs: zstd failed" — surface something the
+    # reader can act on instead.
+    if ! INITRD_CONTENTS="$(lsinitramfs "$SHIPPED_INITRD" 2>&1)"; then
+        echo "ERROR: could not read $SHIPPED_INITRD" >&2
+        echo "       lsinitramfs said: $INITRD_CONTENTS" >&2
+        echo "       Install the decompressor it needs (zstd, xz-utils, gzip)" >&2
+        echo "       on the build host and re-run." >&2
+        exit 1
+    fi
     MISSING_MODULES=""
     for mod in usb-storage uas xhci_pci squashfs overlay vfat; do
         # modprobe knows xhci_pci; the file on disk is xhci-pci.ko. Match
