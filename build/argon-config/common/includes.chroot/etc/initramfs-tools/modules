@@ -1,0 +1,73 @@
+# Argon OS — modules forced into the initramfs.
+#
+# MODULES=most (see conf.d/argon-boot.conf) already pulls in most of this;
+# listing them explicitly means the live image can still find its own root
+# filesystem even if "most" is redefined upstream. Modules that do not
+# exist for a given kernel are reported by update-initramfs as a warning
+# and skipped, so over-listing is safe.
+#
+# Everything here exists to answer one question: can the initramfs reach
+# /live/filesystem.squashfs on the medium the user actually booted from?
+
+## USB host controllers — without these a USB stick never appears at all
+xhci_pci
+xhci_hcd
+xhci_pci_renesas
+ehci_pci
+ehci_hcd
+ehci_platform
+ohci_pci
+ohci_hcd
+uhci_hcd
+
+## USB mass storage. uas (USB Attached SCSI) is what most USB 3 sticks and
+## enclosures bind to; usb-storage alone is not enough on modern hardware.
+usb-storage
+uas
+scsi_mod
+sd_mod
+
+## Optical media, for anyone booting the ISO from a DVD or a VM's virtual
+## drive rather than a USB stick
+sr_mod
+cdrom
+isofs
+
+## The medium's own filesystem. A stick written by Rufus in "ISO mode" (or
+## any tool that extracts rather than dd's the image) holds the live files
+## on FAT32, so vfat plus its codepage/charset helpers are load-bearing —
+## without them the device is visible but unmountable, which fails exactly
+## the same way as a missing driver.
+vfat
+fat
+nls_cp437
+nls_ascii
+nls_iso8859_1
+nls_utf8
+exfat
+
+## The live root itself: squashfs image, loop-mounted, with a writable
+## overlay on top
+squashfs
+loop
+overlay
+
+## Filesystems Argon installs onto, so the installed system's initramfs is
+## equally complete
+ext4
+btrfs
+
+## Internal storage — needed by the installed system, and by live sessions
+## on machines that expose the boot medium through these controllers
+ahci
+nvme
+nvme_core
+virtio_blk
+virtio_scsi
+virtio_pci
+
+## Keyboards. If the boot ever does drop to a recovery prompt, the user
+## needs to be able to type at it.
+hid
+usbhid
+hid_generic

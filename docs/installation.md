@@ -13,11 +13,19 @@ Never install from an image that fails verification.
 
 ## 2. Write it to a USB stick
 
+Argon ships a *hybrid* ISO: it must be written to the stick **byte for
+byte**, not extracted file-by-file.
+
 ```sh
 sudo dd if=argon-<version>-xfce-amd64.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
 (Replace `/dev/sdX` with the USB device, not a partition.)
+
+Graphically, **balenaEtcher** is always correct. If you use **Rufus**,
+choose **"Write in DD Image mode"** when it asks — "ISO Image mode" unpacks
+the image and rebuilds the boot menu, which is a common cause of a stick
+that reaches the boot menu and then fails to start.
 
 ## 3. Boot the live system
 
@@ -39,6 +47,11 @@ can't get locked out.)
 The live session already runs with Argon defaults, so you can check the
 hardware works — Wi-Fi (with a randomized MAC), display, sound — before
 committing to an install.
+
+> **Boot didn't reach the desktop?** If you land at a `(initramfs)` prompt
+> or a black screen, pick **"Start Argon OS (verbose — troubleshoot boot)"**
+> from the boot menu to see the actual error, then see
+> [troubleshooting.md](troubleshooting.md).
 
 ## 4. Install
 

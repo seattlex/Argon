@@ -6,6 +6,39 @@ release tags.
 
 ## [Unreleased]
 
+### Fixed — live boot dropping to a BusyBox `(initramfs)` prompt
+- **The splash ran halfway, then the machine landed in a BusyBox shell.**
+  `live-boot` scans for `/live/filesystem.squashfs` for 60 seconds and then
+  panics into `(initramfs)`; it never found the medium. This reproduced on
+  physical USB boots while working every time in a VM, because a VM's disk
+  uses drivers that are present in any initramfs — the USB path needs
+  drivers that were not guaranteed to be there.
+- The image now **pins `MODULES=most` and forces an explicit boot-media
+  driver set into the initramfs** (`xhci`/`ehci`/`ohci`/`uhci`,
+  `usb-storage`, `uas`, `sd_mod`, `sr_mod`/`isofs`, `squashfs`, `loop`,
+  `overlay`, `vfat` + NLS codepages, `ahci`, `nvme`, virtio). `uas` and the
+  `vfat`/NLS set are the load-bearing additions: most USB 3 sticks bind to
+  `uas` rather than `usb-storage`, and a stick written by Rufus in "ISO
+  mode" holds the live files on FAT32, which is visible but unmountable
+  without them.
+- **The config alone would have done nothing**, which is the actual trap
+  here: live-build installs the kernel (generating the initramfs) *before*
+  it copies `includes.chroot` in, so the new settings landed on disk after
+  the initrd that ships in the image was already built. A new chroot hook
+  regenerates the initramfs after the includes are in place.
+- That hook **verifies the result and fails the build** if `usb-storage`,
+  `uas`, `xhci_pci`, `squashfs`, `overlay` or `vfat` are missing from the
+  generated initrd — this class of bug is invisible until someone boots a
+  physical stick, so it is now caught in CI instead of by a user.
+- Added a **"verbose — troubleshoot boot"** entry to both the BIOS and UEFI
+  menus (`debug=1`, no `quiet splash`). The default entry hid the panic
+  message behind Plymouth, which is why the failure looked like a silent
+  crash with nothing to report.
+- New [troubleshooting guide](docs/troubleshooting.md): how to read the
+  `(initramfs)` prompt, and correct USB-writing guidance (Etcher, or Rufus
+  in **DD mode** — ISO mode rebuilds the boot menu and cannot hold files
+  over 4 GB).
+
 ### Fixed — bootloader made robust across the whole install matrix
 - **`grub-install --target=i386-pc … returned error code 1`.** The erase-disk
   layout now creates a separate **unencrypted 1 GiB ext4 `/boot`**
