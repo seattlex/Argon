@@ -26,10 +26,14 @@ release tags.
   it copies `includes.chroot` in, so the new settings landed on disk after
   the initrd that ships in the image was already built. A new chroot hook
   regenerates the initramfs after the includes are in place.
-- That hook **verifies the result and fails the build** if `usb-storage`,
-  `uas`, `xhci_pci`, `squashfs`, `overlay` or `vfat` are missing from the
-  generated initrd — this class of bug is invisible until someone boots a
-  physical stick, so it is now caught in CI instead of by a user.
+- A second hook **verifies the shipped initrd and fails the build** if
+  `usb-storage`, `uas`, `xhci_pci`, `squashfs`, `overlay` or `vfat` are
+  missing — this class of bug is invisible until someone boots a physical
+  stick, so it is now caught in CI instead of by a user. It runs at `9999`
+  rather than next to the rebuild, because live-build injects its own hooks
+  into the same directory (`1010-enable-cryptsetup` regenerates the
+  initramfs, and the built-ins run up to `9020`): checking any earlier
+  validates an initrd that is then replaced before the image is assembled.
 - Added a **"verbose — troubleshoot boot"** entry to both the BIOS and UEFI
   menus (`debug=1`, no `quiet splash`). The default entry hid the panic
   message behind Plymouth, which is why the failure looked like a silent

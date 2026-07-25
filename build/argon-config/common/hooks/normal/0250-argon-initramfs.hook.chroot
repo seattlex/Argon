@@ -10,6 +10,11 @@
 #
 # Without this hook the initramfs config is inert and the image boots only
 # on hardware whose drivers happened to be in the default initrd.
+#
+# The check that this actually worked lives in 9999-argon-verify-initramfs,
+# deliberately not here: live-build ships its own hooks (1010-enable-cryptsetup
+# among them) that regenerate the initramfs after this one runs, so a check
+# here would validate an initrd that is subsequently replaced.
 set -e
 
 echo "argon: rebuilding initramfs with boot-media drivers"
@@ -30,32 +35,6 @@ for kdir in /lib/modules/*/; do
         update-initramfs -c -k "${kver}"
     fi
     built_any=1
-
-    # Verify rather than assume. A silently-empty initramfs is exactly the
-    # failure this hook exists to prevent, and it is invisible until a user
-    # boots a physical USB stick and lands in a BusyBox prompt — so assert
-    # at build time instead of shipping and hoping.
-    if command -v lsinitramfs >/dev/null 2>&1; then
-        contents="$(lsinitramfs "/boot/initrd.img-${kver}")"
-        missing=""
-        for mod in usb-storage uas xhci_pci squashfs overlay vfat; do
-            # Module names and module *filenames* disagree about separators:
-            # modprobe knows xhci_pci, the file on disk is xhci-pci.ko. Match
-            # either, and allow any compression suffix (.ko.xz, .ko.zst, ...).
-            pattern="$(printf '%s' "${mod}" | sed 's/[-_]/[-_]/g')"
-            if ! printf '%s\n' "${contents}" \
-                | grep -qE "/${pattern}\.ko(\.[a-z0-9]+)?$"; then
-                missing="${missing} ${mod}"
-            fi
-        done
-        if [ -n "${missing}" ]; then
-            echo "argon: ERROR initramfs for ${kver} is missing:${missing}" >&2
-            echo "argon: the image would drop to a BusyBox prompt when booted" >&2
-            echo "argon: from USB — refusing to build a broken image" >&2
-            exit 1
-        fi
-        echo "argon: initramfs ${kver} verified (USB, squashfs, overlay, vfat)"
-    fi
 done
 
 if [ "${built_any}" -eq 0 ]; then
