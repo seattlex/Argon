@@ -54,6 +54,11 @@ for kdir in /lib/modules/*/; do
         # modprobe knows xhci_pci, the file on disk is xhci-pci.ko. Match
         # either, and allow any compression suffix (.ko.xz, .ko.zst, ...).
         pattern="$(printf '%s' "${mod}" | sed 's/[-_]/[-_]/g')"
+        # This pipe is only safe because this script does NOT set pipefail.
+        # grep -q exits on the first match and kills printf with SIGPIPE; with
+        # pipefail that 141 becomes the pipeline's status and every match reads
+        # as a miss. Do not add `set -o pipefail` here without switching to a
+        # here-string, as scripts/build-iso.sh had to.
         if ! printf '%s\n' "${contents}" \
             | grep -qE "/${pattern}\.ko(\.[a-z0-9]+)?$"; then
             missing="${missing} ${mod}"

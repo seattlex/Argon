@@ -187,46 +187,46 @@ if command -v lsinitramfs >/dev/null 2>&1; then
         echo "       on the build host and re-run." >&2
         exit 1
     fi
+    # Feed grep with a here-string, never a pipe.
+    #
+    # `printf '%s\n' "$list" | grep -q PATTERN` is actively wrong under
+    # `set -o pipefail`, which this script uses: grep -q exits the moment it
+    # matches, printf is killed by SIGPIPE (exit 141) partway through the
+    # ~3700-line listing, and pipefail then reports 141 as the pipeline's
+    # status. `if ! pipeline` therefore reads a *successful match* as a
+    # miss. That is not hypothetical — it made an earlier revision of this
+    # check report all six modules missing from an initramfs that in fact
+    # contained 986 of them. It also hides in testing, because a short
+    # listing fits in the pipe buffer and printf finishes before grep exits.
     MISSING_MODULES=""
     for mod in usb-storage uas xhci_pci squashfs overlay vfat; do
         # modprobe knows xhci_pci; the file on disk is xhci-pci.ko. Match
         # either separator, and any compression suffix (.ko.xz, .ko.zst).
         pattern="$(printf '%s' "$mod" | sed 's/[-_]/[-_]/g')"
-        if ! printf '%s\n' "$INITRD_CONTENTS" \
-            | grep -qE "/${pattern}\.ko(\.[a-z0-9]+)?$"; then
+        if ! grep -qE "/${pattern}\.ko(\.[a-z0-9]+)?$" <<<"$INITRD_CONTENTS"
+        then
             MISSING_MODULES="$MISSING_MODULES $mod"
         fi
     done
     if [ -n "$MISSING_MODULES" ]; then
-        # Report as a warning, not a hard failure, until this check has been
-        # observed working on a real image. It is new, it has already been
-        # wrong once (it lacked a decompressor), and a gate whose own
-        # correctness is unproven must not be able to block publishing a
-        # good ISO. The in-chroot check (hook 9999) is the one that is
-        # proven, and it stays fatal. Promote this back to `exit 1` once a
-        # build shows it passing.
-        echo "    WARNING: could not find these modules in the shipped" >&2
-        echo "    initramfs ($SHIPPED_INITRD):" >&2
-        echo "       $MISSING_MODULES" >&2
-        echo "    If that is real, the image drops to a BusyBox (initramfs)" >&2
-        echo "    prompt when booted from USB. Evidence follows so the next" >&2
-        echo "    run can tell a detection fault from a genuine one:" >&2
-        printf '      entries listed:      %s\n' \
-            "$(printf '%s\n' "$INITRD_CONTENTS" | wc -l)" >&2
-        printf '      entries matching .ko: %s\n' \
-            "$(printf '%s\n' "$INITRD_CONTENTS" | grep -c '\.ko' || true)" >&2
-        echo "      first 3 entries:" >&2
-        printf '%s\n' "$INITRD_CONTENTS" | head -n3 | sed 's/^/        /' >&2
-        echo "      sample module paths:" >&2
-        printf '%s\n' "$INITRD_CONTENTS" | grep '/modules/' | head -n5 \
-            | sed 's/^/        /' >&2 || true
-        echo "      any usb/squashfs entries:" >&2
-        printf '%s\n' "$INITRD_CONTENTS" \
-            | grep -E 'usb|squashfs|overlay' | head -n5 \
-            | sed 's/^/        /' >&2 || true
-    else
-        echo "    verified: usb-storage uas xhci_pci squashfs overlay vfat"
+        echo "ERROR: the shipped initramfs ($SHIPPED_INITRD) is missing:" >&2
+        echo "      $MISSING_MODULES" >&2
+        echo "       This image would drop to a BusyBox (initramfs) prompt when" >&2
+        echo "       booted from USB. Refusing to publish it." >&2
+        # Evidence, so a future failure can be told apart from a bug in this
+        # check. grep -m stops after N matches instead of piping into head,
+        # which would reintroduce exactly the SIGPIPE problem described above.
+        echo "       evidence:" >&2
+        printf '         entries listed:       %s\n' \
+            "$(wc -l <<<"$INITRD_CONTENTS")" >&2
+        printf '         entries matching .ko: %s\n' \
+            "$(grep -c '\.ko' <<<"$INITRD_CONTENTS" || true)" >&2
+        echo "         sample module paths:" >&2
+        grep -m5 '/modules/' <<<"$INITRD_CONTENTS" \
+            | sed 's/^/           /' >&2 || true
+        exit 1
     fi
+    echo "    verified: usb-storage uas xhci_pci squashfs overlay vfat"
 else
     echo "    WARNING: lsinitramfs not found, so the shipped initramfs could" >&2
     echo "    NOT be verified. Install initramfs-tools to enable this check." >&2
