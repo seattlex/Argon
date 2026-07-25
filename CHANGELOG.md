@@ -57,6 +57,20 @@ release tags.
   with per-vendor firmware steps (incl. MSI) and the BitLocker caveat for
   dual-booters. A signed shim stays on the roadmap.
 
+### Fixed — Security Edition build exhausting runner disk
+- The first Security Edition CI build died silently partway through (~8 min
+  in, vs. the usual ~17; the "Build ISO" step never reached a terminal
+  state and no log was ever committed — the signature of the runner
+  process itself being killed, not a normal script failure). Root cause:
+  live-build's package cache (`--cache-packages`, on by default) keeps a
+  *second* copy of every downloaded `.deb` on disk purely so a later build
+  can skip re-downloading — but `build-iso.sh` runs `lb clean --purge`
+  before every single build, local or CI, so that reuse never happens and
+  the cache was pure duplication. Harmless normally; with
+  `kali-linux-default`'s much larger package set, likely enough to tip a
+  GitHub-hosted runner's disk over the edge. Disabled via
+  `--cache-packages false` in `auto/config`, for every variant.
+
 ### Added — Argon Security Edition (build variant)
 - New `security` build variant: the identical privacy-hardened OS plus
   Kali's standard tool selection (`kali-linux-default`) preinstalled,
