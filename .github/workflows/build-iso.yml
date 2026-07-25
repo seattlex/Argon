@@ -45,7 +45,12 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends \
             live-build git ca-certificates xz-utils \
-            build-essential debhelper librsvg2-bin
+            build-essential debhelper librsvg2-bin \
+            initramfs-tools
+          # initramfs-tools provides lsinitramfs, which build-iso.sh uses to
+          # assert the shipped initramfs can actually reach the live medium.
+          # The container has no kernel, so it is not installed by default —
+          # without it that check downgrades to a warning and stops gating.
 
       - uses: actions/checkout@v4
 

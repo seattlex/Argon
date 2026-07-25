@@ -5,8 +5,13 @@
 # boot-media drivers, but live-build injects its own hooks into the same
 # directory (1010-enable-cryptsetup regenerates the initramfs, and the
 # built-ins run up to 9020), so anything checked earlier can still be
-# replaced before the image is assembled. This runs after all of them, so
-# what it inspects is what live-build copies into binary/live/.
+# replaced. This runs after all of them.
+#
+# It is still not the final word: live-build regenerates the initramfs once
+# more in `lb chroot_hacks`, a build stage that runs after every hook. This
+# hook therefore catches a broken configuration early and with a clear
+# message, while the authoritative assertion — against the file actually
+# copied into binary/live/ — lives in scripts/build-iso.sh.
 #
 # The failure being guarded against: live-boot scans for
 # /live/filesystem.squashfs for 60 seconds, then panics into a BusyBox

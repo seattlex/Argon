@@ -154,6 +154,51 @@ ARGON_VARIANT="$VARIANT" ARGON_VERSION="$VERSION" lb config
 echo "==> lb build (this takes a while)"
 lb build
 
+# Verify the initramfs that actually ships.
+#
+# This cannot be done from a chroot hook. live-build regenerates the
+# initramfs in `lb chroot_hacks`, a build *stage* that runs after every
+# config/hooks/* hook has finished — so the in-chroot check (hook 9999)
+# inspects an initrd that is subsequently rebuilt. The file live-build
+# copies into binary/live/ is the one users boot, and it is the only
+# meaningful thing to assert on.
+#
+# What is being guarded: without USB/vfat/squashfs drivers, live-boot
+# scans for /live/filesystem.squashfs for 60 seconds and then panics into
+# a BusyBox "(initramfs)" prompt. That is invisible in a VM and only shows
+# up when someone boots a physical stick.
+echo "==> Verifying the shipped initramfs"
+SHIPPED_INITRD="$(find "$BUILD_DIR/binary" -maxdepth 2 -name 'initrd*' -type f 2>/dev/null | sort | head -n1 || true)"
+if [ -z "$SHIPPED_INITRD" ]; then
+    echo "ERROR: no initramfs found under $BUILD_DIR/binary — the image would" >&2
+    echo "       not be bootable at all" >&2
+    exit 1
+fi
+if command -v lsinitramfs >/dev/null 2>&1; then
+    INITRD_CONTENTS="$(lsinitramfs "$SHIPPED_INITRD")"
+    MISSING_MODULES=""
+    for mod in usb-storage uas xhci_pci squashfs overlay vfat; do
+        # modprobe knows xhci_pci; the file on disk is xhci-pci.ko. Match
+        # either separator, and any compression suffix (.ko.xz, .ko.zst).
+        pattern="$(printf '%s' "$mod" | sed 's/[-_]/[-_]/g')"
+        if ! printf '%s\n' "$INITRD_CONTENTS" \
+            | grep -qE "/${pattern}\.ko(\.[a-z0-9]+)?$"; then
+            MISSING_MODULES="$MISSING_MODULES $mod"
+        fi
+    done
+    if [ -n "$MISSING_MODULES" ]; then
+        echo "ERROR: the shipped initramfs ($SHIPPED_INITRD) is missing:" >&2
+        echo "      $MISSING_MODULES" >&2
+        echo "       This image would drop to a BusyBox (initramfs) prompt when" >&2
+        echo "       booted from USB. Refusing to publish it." >&2
+        exit 1
+    fi
+    echo "    verified: usb-storage uas xhci_pci squashfs overlay vfat"
+else
+    echo "    WARNING: lsinitramfs not found, so the shipped initramfs could" >&2
+    echo "    NOT be verified. Install initramfs-tools to enable this check." >&2
+fi
+
 ISO_FILE="$(find "$BUILD_DIR" -maxdepth 1 -name 'argon-*.iso' | sort | head -n1)"
 if [ -z "$ISO_FILE" ]; then
     # live-build names images live-image-* if --image-name was not honoured
