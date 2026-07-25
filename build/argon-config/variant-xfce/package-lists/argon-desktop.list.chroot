@@ -47,6 +47,18 @@ pavucontrol
 pipewire
 pipewire-pulse
 wireplumber
+# The pieces of a working audio stack that recommends-off would otherwise
+# drop. Native PipeWire/Pulse apps (Firefox, etc.) play through pipewire +
+# wireplumber alone, but these complete it:
+#   pipewire-alsa          — routes plain ALSA apps through PipeWire
+#   libspa-0.2-bluetooth   — Bluetooth audio (A2DP/HFP); pairs with the
+#                            bluez/blueman stack, without it a paired
+#                            headset connects but plays nothing
+#   rtkit                  — realtime scheduling so audio doesn't crackle
+#                            under load (wireplumber asks rtkit for it)
+pipewire-alsa
+libspa-0.2-bluetooth
+rtkit
 gvfs
 gvfs-backends
 xdg-user-dirs

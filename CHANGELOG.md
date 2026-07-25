@@ -6,6 +6,24 @@ release tags.
 
 ## [Unreleased]
 
+### Fixed — no audio at all (PipeWire user services were never enabled)
+- **The machine was silent.** PipeWire, `pipewire-pulse` and WirePlumber
+  were installed, but nothing started them: they ship systemd *user* units,
+  and the service hook only enabled *system* units (`systemctl enable`
+  can't touch user units). With no WirePlumber running there is no session
+  manager to route audio, which is the textbook "PipeWire installed but no
+  sound". Now `systemctl --global enable`d for every user — the live
+  `argon` account and any the installer creates — via `pipewire.socket`,
+  `pipewire-pulse.socket` and `wireplumber.service`.
+- Added the audio-stack pieces that `--apt-recommends false` had been
+  silently dropping: `pipewire-alsa` (plain-ALSA apps), `rtkit`
+  (glitch-free realtime scheduling), and `libspa-0.2-bluetooth` — without
+  which a paired Bluetooth headset connects but plays nothing.
+- **Bluetooth was enabled and then immediately disabled** in the same hook
+  (the new `enable` line met a pre-existing `disable` line left from when
+  Bluetooth wasn't installed), so it shipped off. Removed the stale
+  disable; Bluetooth is a local radio, not a network-advertised service.
+
 ### Fixed — encrypted installs looked like a hung boot (invisible passphrase prompt)
 - **The LUKS passphrase prompt rendered invisibly.** Every text element in
   Argon's plymouth splash goes through the theme's `Image.Text()`, which
