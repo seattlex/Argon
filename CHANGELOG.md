@@ -6,6 +6,52 @@ release tags.
 
 ## [Unreleased]
 
+### Fixed — encrypted installs looked like a hung boot (invisible passphrase prompt)
+- **The LUKS passphrase prompt rendered invisibly.** Every text element in
+  Argon's plymouth splash goes through the theme's `Image.Text()`, which
+  needs plymouth's *label* plugin — a separate package
+  (`plymouth-label`) that is only a Recommends, and recommends are
+  globally off. The splash showed the logo but no text at all, so an
+  encrypted install booted into an *invisible* password prompt and sat
+  there — read as "encryption is incompatible / boot fails", while
+  unencrypted installs (which never prompt) booted fine. Added
+  `plymouth-label` (+ `fonts-dejavu-core` for the font the initramfs hook
+  copies in). The Calamares module chain itself was verified against the
+  upstream source and is correct for the unencrypted-`/boot` layout
+  (root's crypttab entry gets `none` → initramfs prompts).
+- Troubleshooting guide now covers encrypted boots: the passphrase screen
+  is expected at every boot, type-blind + Enter works, and **Esc** always
+  reveals the text prompt beneath the splash.
+
+### Fixed — Secure Boot failure now named and documented
+- **"Verification failed: (0x1A) Security Violation"** when booting the
+  USB on UEFI machines is Secure Boot rejecting Argon's (Kali-derived,
+  unsigned) boot chain — it reads like a corrupt ISO and isn't. The exact
+  message is now in the README, install guide and troubleshooting guide
+  with per-vendor firmware steps (incl. MSI) and the BitLocker caveat for
+  dual-booters. A signed shim stays on the roadmap.
+
+### Added — Argon Security Edition (build variant)
+- New `security` build variant: the identical privacy-hardened OS plus
+  Kali's standard tool selection (`kali-linux-default`) preinstalled,
+  unmodified from the same Kali repositories. Argon's no-listening-services
+  rule still applies — tools are installed, nothing starts or listens.
+- Build variants can now layer on a parent (`variant-security/parent` →
+  `xfce`), so editions share the desktop instead of duplicating it; lint
+  assembles the security config to keep the layering honest.
+- CI publishes each edition under its own rolling asset name, and splits
+  images over GitHub's 2 GiB release-asset cap into `.part*` files with
+  reassembly instructions in the release notes.
+
+### Changed — minimal panel + QOL
+- The four coloured lock/logout/restart/shutdown buttons in the panel are
+  now a single neutral session button (its dialog and the Whisker menu
+  carry the same actions) — the loudest element of the default desktop,
+  gone.
+- Bluetooth finally works out of the box: `bluez` + `blueman` (tray UI),
+  service enabled; local radio only, no network listener.
+- `fastfetch` ships for a pretty terminal system summary.
+
 ### Fixed — live boot dropping to a BusyBox `(initramfs)` prompt
 - **The splash ran halfway, then the machine landed in a BusyBox shell.**
   `live-boot` scans for `/live/filesystem.squashfs` for 60 seconds and then

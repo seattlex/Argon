@@ -36,9 +36,12 @@ your disks until you run the installer, and the installer is where you
 create your own account.
 
 > **UEFI machines: disable Secure Boot first** (firmware setup → Security).
-> Argon's kernel follows Kali and is not Microsoft-signed, so with Secure
-> Boot enabled the machine either refuses to boot the USB stick or refuses
-> to boot the installed system. Signed-shim support is on the roadmap.
+> Argon's kernel follows Kali and is not Microsoft-signed. With Secure
+> Boot enabled the firmware stops the USB stick with
+> **"Verification failed: (0x1A) Security Violation"** — which looks like
+> a corrupt download but isn't — and later refuses to boot the installed
+> system the same way. Signed-shim support is on the roadmap; see
+> [troubleshooting.md](troubleshooting.md) for the firmware steps.
 
 (If a login prompt ever does appear, the live account is `argon` /
 `argon`. Automatic screen-locking is disabled in the live session so you

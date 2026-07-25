@@ -1,5 +1,52 @@
 # Troubleshooting Argon OS
 
+## "Verification failed: (0x1A) Security Violation" — the USB won't boot
+
+**Symptom.** On a UEFI machine (MSI, ASUS, Gigabyte, most laptops) the
+Argon USB refuses to start and the firmware shows:
+
+```
+Verification failed: (0x1A) Security Violation
+```
+
+**Your ISO is not corrupt.** This is UEFI **Secure Boot** rejecting
+Argon's bootloader. Argon follows Kali: its boot chain and kernel are not
+signed by a key your firmware trusts, so Secure Boot blocks it before the
+OS gets a single instruction in.
+
+**Fix: disable Secure Boot** in the firmware setup (usually
+Del/F2 at power-on → *Security* or *Boot* → **Secure Boot → Disabled**;
+on MSI boards it lives under *Settings → Advanced → Windows OS
+Configuration → Secure Boot*). It must stay disabled for the installed
+system too — re-enabling it later blocks the installed Argon the same way.
+
+Dual-booters: disabling Secure Boot does not break Windows; BitLocker may
+ask for its recovery key once after the change, so have it available.
+
+A properly signed shim (boot with Secure Boot enabled, no firmware
+changes) is on the [roadmap](roadmap.md).
+
+## Encrypted install: black/stuck screen at boot — where is the passphrase prompt?
+
+An encrypted install **must ask for your passphrase at every boot** —
+that screen appearing is the system working, not failing. If the boot
+splash sits there and nothing seems to happen, the machine is almost
+certainly *waiting at the passphrase prompt*:
+
+* Type the passphrase and press Enter even if you see no prompt or no
+  feedback, then give it a few seconds.
+* Or press **Esc** to leave the graphical splash — the text console
+  underneath shows the `Please unlock disk` prompt explicitly.
+
+Images built before 2026-07-25 had a bug where the splash rendered the
+prompt invisibly (the text plugin was missing from the image), which made
+encrypted installs look like a hung boot. Current images render the
+prompt; if you hit this, reinstall from the latest rolling ISO.
+
+If the passphrase is accepted but boot still fails, boot the live USB,
+and collect `/var/log/calamares/session.log` (if still present) plus a
+photo of the failure for a bug report.
+
 ## Boot stops at a `(initramfs)` prompt
 
 **Symptom.** The boot splash runs for a while, then the screen switches to:

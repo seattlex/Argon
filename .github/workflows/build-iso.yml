@@ -148,10 +148,29 @@ jobs:
         if: github.ref_type != 'tag' && success()
         run: |
           cd iso
+          rm -f ./*.sha256 ./*.part*
           iso=$(ls *.iso | head -n1)
-          mv -f "$iso" argon-rolling-amd64.iso
-          rm -f ./*.sha256
-          sha256sum argon-rolling-amd64.iso > argon-rolling-amd64.iso.sha256
+          # Per-variant asset names so editions coexist on the one rolling
+          # release: the xfce edition keeps the historical name, other
+          # variants (e.g. security) get their own.
+          variant="${{ github.event.inputs.variant || 'xfce' }}"
+          if [ "$variant" = "xfce" ]; then
+            name=argon-rolling-amd64.iso
+          else
+            name="argon-${variant}-rolling-amd64.iso"
+          fi
+          mv -f "$iso" "$name"
+          # Checksum of the WHOLE image, split or not — it is what users
+          # verify after (re)assembly.
+          sha256sum "$name" > "$name.sha256"
+          # GitHub release assets cap at 2 GiB per file. The Security
+          # Edition exceeds that, so split oversized images into parts the
+          # release can hold; the release notes explain reassembly.
+          if [ "$(stat -c%s "$name")" -gt 1900000000 ]; then
+            split -b 1900M "$name" "$name.part"
+            rm -f "$name"
+            ls -l ./*.part*
+          fi
 
       - name: Publish rolling snapshot
         if: github.ref_type != 'tag' && success()
@@ -163,8 +182,9 @@ jobs:
           make_latest: false
           fail_on_unmatched_files: false
           files: |
-            iso/argon-rolling-amd64.iso
-            iso/argon-rolling-amd64.iso.sha256
+            iso/argon-*rolling-amd64.iso
+            iso/argon-*rolling-amd64.iso.sha256
+            iso/argon-*rolling-amd64.iso.part*
           body: |
             ## Argon OS — rolling snapshot
 
@@ -176,7 +196,16 @@ jobs:
             **Download** `argon-rolling-amd64.iso`, write it to a USB stick
             (e.g. with [balenaEtcher](https://etcher.balena.io/)), and boot.
 
+            **Security Edition** (`argon-security-…`) images exceed GitHub's
+            2 GiB per-file limit and are published as `.partaa`, `.partab`, …
+            Download every part, then reassemble:
+            ```
+            cat argon-security-rolling-amd64.iso.part* > argon-security-rolling-amd64.iso
+            ```
+            (Windows: `copy /b *.partaa+*.partab argon-security-rolling-amd64.iso`)
+
             ### Verify your download
             ```
             sha256sum -c argon-rolling-amd64.iso.sha256
             ```
+            (For split editions, verify after reassembling.)

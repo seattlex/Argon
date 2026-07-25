@@ -47,13 +47,13 @@
       <property name="digital-layout" type="uint" value="3"/>
       <property name="digital-time-format" type="string" value="%H:%M"/>
     </property>
+    <!-- One neutral session button, not four coloured ones: the logout
+         dialog it opens already offers lock / restart / shutdown, and the
+         Whisker menu carries the same actions. Keeps the panel minimal. -->
     <property name="plugin-8" type="string" value="actions">
       <property name="appearance" type="uint" value="0"/>
       <property name="items" type="array">
-        <value type="string" value="+lock-screen"/>
-        <value type="string" value="+logout"/>
-        <value type="string" value="+restart"/>
-        <value type="string" value="+shutdown"/>
+        <value type="string" value="+logout-dialog"/>
       </property>
     </property>
   </property>

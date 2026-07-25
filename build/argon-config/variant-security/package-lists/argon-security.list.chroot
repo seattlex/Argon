@@ -1,0 +1,22 @@
+# Argon OS — Security Edition
+# Everything from the XFCE edition (this variant's parent), plus the
+# standard Kali tool selection. The tools come unmodified from the Kali
+# repositories Argon already builds against — this edition simply
+# preinstalls what the standard edition leaves one `apt install` away.
+#
+# kali-linux-default is Kali's own "default tool selection" metapackage:
+# the set a stock Kali installation ships with (nmap, wireshark,
+# metasploit, burpsuite, sqlmap, john, hydra, aircrack-ng, ...). Using the
+# metapackage rather than a hand-picked list means the selection tracks
+# Kali's, and updates with it.
+#
+# NOTE the size: this roughly doubles the ISO. GitHub release assets cap
+# at 2 GiB per file, so CI publishes Security Edition images split into
+# parts (see .github/workflows/build-iso.yml) — download all parts and
+# concatenate, per the release notes.
+kali-linux-default
+
+## Argon defaults still apply. In particular:
+##  * UFW stays deny-incoming and no service listens by default — the
+##    tools are installed, not started.
+##  * AppArmor, DNS-over-TLS, MAC randomization etc. are unchanged.

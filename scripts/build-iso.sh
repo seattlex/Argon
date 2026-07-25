@@ -65,8 +65,31 @@ mkdir -p "$BUILD_DIR/config"
 # Layer 1: common configuration
 cp -a "$BUILD_DIR/argon-config/common/." "$BUILD_DIR/config/"
 
-# Layer 2: variant overlay (may override common files)
+# Layer 2: parent variant, if this variant declares one. A variant with a
+# `parent` file (e.g. variant-security's contains "xfce") is an overlay on
+# that variant rather than a sibling: the parent's desktop, theming and
+# package lists apply first, then this variant adds to or overrides them.
+# One level only — a parent may not itself have a parent.
+if [ -f "$VARIANT_DIR/parent" ]; then
+    PARENT_VARIANT="$(tr -d '[:space:]' < "$VARIANT_DIR/parent")"
+    PARENT_DIR="$BUILD_DIR/argon-config/variant-$PARENT_VARIANT"
+    if [ ! -d "$PARENT_DIR" ]; then
+        echo "ERROR: variant '$VARIANT' declares parent '$PARENT_VARIANT'," >&2
+        echo "       but $PARENT_DIR does not exist" >&2
+        exit 1
+    fi
+    if [ -f "$PARENT_DIR/parent" ]; then
+        echo "ERROR: parent variant '$PARENT_VARIANT' has a parent of its" >&2
+        echo "       own — only one level of variant nesting is supported" >&2
+        exit 1
+    fi
+    cp -a "$PARENT_DIR/." "$BUILD_DIR/config/"
+fi
+
+# Layer 3: variant overlay (may override common/parent files)
 cp -a "$VARIANT_DIR/." "$BUILD_DIR/config/"
+# The `parent` marker is build machinery, not live-build configuration
+rm -f "$BUILD_DIR/config/parent"
 
 CHROOT_INC="$BUILD_DIR/config/includes.chroot"
 

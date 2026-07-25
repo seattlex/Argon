@@ -80,6 +80,16 @@ fonts-dejavu
 xfce4-clipman-plugin
 redshift-gtk
 
+## Bluetooth — the stack was missing entirely; headsets/mice are table
+## stakes on laptops. blueman is the tray/manager UI, bluez the daemon.
+## The service is enabled by the services hook; it does not listen on the
+## network.
+bluez
+blueman
+
+## A little flash — fast, pretty system-info in the terminal
+fastfetch
+
 ## Faster & lighter — compressed RAM swap + OOM protection on low-memory boxes
 zram-tools
 earlyoom

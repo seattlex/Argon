@@ -69,6 +69,30 @@ if ! ./scripts/build-iso.sh --skip-build --variant xfce --version ci-test; then
     echo "config assembly failed"
     FAIL=1
 fi
+
+# The security variant layers on xfce via a `parent` file — assemble it too
+# so a broken layering (missing parent, stray `parent` marker in the output,
+# lost desktop package list) fails in lint rather than 15 minutes into a
+# real build.
+echo "==> live-build config assembly (security variant)"
+if ! ./scripts/build-iso.sh --skip-build --variant security --version ci-test; then
+    echo "security variant assembly failed"
+    FAIL=1
+fi
+for path in \
+    build/config/package-lists/argon-desktop.list.chroot \
+    build/config/package-lists/argon-security.list.chroot; do
+    if [ ! -f "$path" ]; then
+        echo "missing from security config: $path"
+        FAIL=1
+    fi
+done
+if [ -e build/config/parent ]; then
+    echo "variant 'parent' marker leaked into the assembled config"
+    FAIL=1
+fi
+# Leave the tree in the state the later checks expect (xfce)
+./scripts/build-iso.sh --skip-build --variant xfce --version ci-test >/dev/null
 # The assembled tree must contain the essentials
 for path in \
     build/config/package-lists/argon-base.list.chroot \

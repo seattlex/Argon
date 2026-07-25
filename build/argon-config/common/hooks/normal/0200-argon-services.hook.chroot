@@ -26,6 +26,9 @@ enable_unit apt-daily-upgrade.timer
 enable_unit chrony.service || enable_unit chronyd.service
 enable_unit systemd-resolved.service
 enable_unit NetworkManager.service
+# Bluetooth daemon for the desktop's blueman; local radio only, opens no
+# network port, and stays off on hardware without an adapter.
+enable_unit bluetooth.service
 
 # Performance (faster/lighter): compressed RAM swap and OOM protection so
 # low-memory machines stay responsive instead of freezing.
