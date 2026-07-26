@@ -109,6 +109,15 @@ redshift-gtk
 bluez
 blueman
 
+## Optional Wayland session (experimental). XFCE X11 stays the default; this
+## adds a selectable "Argon (Wayland)" session at the login screen for those
+## who want it — labwc (a small wlroots compositor) with a waybar panel,
+## swaybg wallpaper and a fuzzel launcher. Terminal/apps run under XWayland.
+labwc
+waybar
+swaybg
+fuzzel
+
 ## A little flash — fast, pretty system-info in the terminal
 fastfetch
 

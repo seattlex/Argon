@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Argon (Wayland)
+Comment=Experimental lightweight Wayland session (labwc)
+Exec=labwc
+Type=Application
+DesktopNames=labwc
+Keywords=wayland;labwc;

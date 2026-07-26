@@ -1,0 +1,13 @@
+# Argon OS — labwc (Wayland) session autostart.
+# Paints the Argon wallpaper and starts the panel. Kept deliberately small;
+# this is the experimental Wayland option, not the primary desktop.
+
+# Wallpaper (same image as the XFCE desktop), scaled to fill.
+swaybg -i /usr/share/backgrounds/argon/argon-default.png -m fill &
+
+# Panel (waybar uses its packaged default config if none is provided).
+waybar &
+
+# Network/Bluetooth/volume trays via the XFCE helpers (run under XWayland).
+nm-applet --indicator &
+blueman-applet &

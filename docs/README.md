@@ -7,6 +7,7 @@
 | [installation.md](installation.md) | Installing Argon (live session, Calamares, disk encryption) |
 | [troubleshooting.md](troubleshooting.md) | Boot and install problems: `(initramfs)` prompt, black screen, USB sticks |
 | [applications.md](applications.md) | Argon Software (the app store) and Argon Welcome |
+| [wayland.md](wayland.md) | The optional, experimental Wayland session (labwc) |
 | [updates.md](updates.md) | Keeping Argon current (automatic security fixes + one-click updates) |
 | [snapshots.md](snapshots.md) | Btrfs snapshots + one-step rollback of a bad update |
 | [migrating.md](migrating.md) | Upgrading an older install to the current build (no reinstall) |

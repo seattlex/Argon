@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!-- Argon OS - labwc (Wayland) session defaults. Minimal, dark, with the
+     essential keybinds so the session is usable out of the box. -->
+<labwc_config>
+  <theme>
+    <cornerRadius>6</cornerRadius>
+  </theme>
+
+  <keyboard>
+    <!-- Launcher, terminal, and window management -->
+    <keybind key="W-d">
+      <action name="Execute" command="fuzzel" />
+    </keybind>
+    <keybind key="W-Return">
+      <action name="Execute" command="xfce4-terminal" />
+    </keybind>
+    <keybind key="A-F4">
+      <action name="Close" />
+    </keybind>
+    <keybind key="W-Left">
+      <action name="SnapToEdge" direction="left" />
+    </keybind>
+    <keybind key="W-Right">
+      <action name="SnapToEdge" direction="right" />
+    </keybind>
+    <keybind key="W-Up">
+      <action name="ToggleMaximize" />
+    </keybind>
+    <keybind key="XF86_AudioRaiseVolume">
+      <action name="Execute" command="pactl set-sink-volume @DEFAULT_SINK@ +5%" />
+    </keybind>
+    <keybind key="XF86_AudioLowerVolume">
+      <action name="Execute" command="pactl set-sink-volume @DEFAULT_SINK@ -5%" />
+    </keybind>
+    <keybind key="XF86_AudioMute">
+      <action name="Execute" command="pactl set-sink-mute @DEFAULT_SINK@ toggle" />
+    </keybind>
+  </keyboard>
+</labwc_config>

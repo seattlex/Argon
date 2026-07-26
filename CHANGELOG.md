@@ -6,6 +6,14 @@ release tags.
 
 ## [Unreleased]
 
+### Added — optional Wayland session (experimental)
+- A selectable **"Argon (Wayland)"** session at the login screen, for those
+  who want Wayland — a small labwc (wlroots) compositor with the Argon
+  wallpaper (swaybg), a waybar panel, a fuzzel launcher and sensible
+  keybinds, plus the network/Bluetooth/volume trays. XFCE on X11 remains
+  the default and is completely untouched; this is purely opt-in and marked
+  experimental. See [wayland.md](docs/wayland.md).
+
 ### Changed — installer polish
 - Added Calamares module configs that were missing: `welcome.conf`
   (requirement checks for storage/RAM/root; **the network connectivity
