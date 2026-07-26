@@ -1,0 +1,26 @@
+#!/bin/sh
+# Argon OS — pre-apt Btrfs snapshot (called from apt.conf.d/80argon-snapshot).
+#
+# Takes one read-only "pre" snapshot of the root subvolume so the state just
+# before a package change can be restored. Silent and self-disabling on
+# anything that isn't a snapper-configured Btrfs root, and never fails in a
+# way that would abort the apt run.
+set -eu
+
+# Only on a Btrfs root with snapper set up (skips ext4, live, containers).
+[ "$(stat -f -c %T / 2>/dev/null || echo x)" = "btrfs" ] || exit 0
+command -v snapper >/dev/null 2>&1 || exit 0
+snapper list-configs 2>/dev/null | grep -qw root || exit 0
+
+# What is apt doing? Best-effort description from its command line.
+desc="apt change"
+if [ -n "${CMDLINE:-}" ]; then
+    desc="apt: ${CMDLINE}"
+fi
+desc="$(printf '%s' "$desc" | cut -c1-72)"
+
+# A numbered single snapshot; the cleanup timer prunes to NUMBER_LIMIT.
+snapper -c root create -t single -c number \
+    -d "$desc" -u "argon-apt=pre" 2>/dev/null || true
+
+exit 0

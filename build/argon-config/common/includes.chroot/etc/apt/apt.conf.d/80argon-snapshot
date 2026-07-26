@@ -1,0 +1,7 @@
+// Argon OS — snapshot the system before every apt/dpkg change.
+//
+// Runs argon-snapshot-apt just before dpkg unpacks anything. That helper is
+// a no-op unless the root filesystem is Btrfs and snapper is configured, so
+// this line is harmless on ext4 or in the live session. `|| true` means a
+// snapshot failure can never block a package operation.
+DPkg::Pre-Invoke { "/usr/libexec/argon/argon-snapshot-apt || true"; };

@@ -86,3 +86,12 @@ cryptsetup-initramfs
 btrfs-progs
 dosfstools
 gparted
+
+## Btrfs snapshots + rollback (only active on btrfs installs; a first-boot
+## service configures snapper, and an apt hook snapshots before every
+## package transaction so a bad upgrade can be rolled back in one step).
+## grub-btrfs adds those snapshots to the boot menu; inotify-tools is what
+## its watcher daemon uses (a Recommends, and recommends are off).
+snapper
+grub-btrfs
+inotify-tools

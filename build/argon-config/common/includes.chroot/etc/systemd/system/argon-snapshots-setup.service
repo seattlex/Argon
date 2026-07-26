@@ -1,0 +1,18 @@
+[Unit]
+Description=Argon OS — configure Btrfs snapshots (first boot, installed systems)
+# Live sessions run off a squashfs, not Btrfs, so skip them outright.
+ConditionPathExists=!/run/live/medium
+# Runs until snapper's config exists, then this marker keeps it from
+# re-running on every boot.
+ConditionPathExists=!/var/lib/argon/snapshots-configured
+After=local-fs.target
+Wants=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/argon/argon-snapshots-setup
+ExecStartPost=/bin/sh -c 'mkdir -p /var/lib/argon && : > /var/lib/argon/snapshots-configured'
+
+[Install]
+WantedBy=multi-user.target

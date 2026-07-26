@@ -6,6 +6,23 @@ release tags.
 
 ## [Unreleased]
 
+### Added — automatic Btrfs snapshots + one-step rollback
+- On a Btrfs install (the default), Argon now snapshots the root subvolume
+  **before every package change** via an apt `Pre-Invoke` hook, so a bad
+  upgrade can be undone. Built on the standard **snapper + grub-btrfs**
+  stack rather than hand-rolled: a first-boot service (`argon-snapshots-
+  setup`, installed systems only) configures snapper for `/`, and
+  grub-btrfs adds the snapshots to the boot menu so you can boot one
+  read-only to preview before committing.
+- No background timer — snapshots happen around `apt`, and the last 12 are
+  kept and auto-pruned. `/home` (a separate subvolume) is never part of a
+  snapshot, so rolling back never touches personal files. The whole thing
+  self-skips on ext4 and in the live session.
+- `argon-snapshot` CLI (`status` / `list` / `create` / `rollback`) and a
+  [snapshots guide](docs/snapshots.md). Rollback delegates to snapper's
+  tested `rollback` (which snapshots the current state first, so it's
+  itself undoable).
+
 ### Added — Argon Update (one-click updates for existing installs)
 - New **Argon Update** app (menu → System, and a button on Argon Welcome):
   **Check for updates** then **Update now**, with apt's progress streaming
