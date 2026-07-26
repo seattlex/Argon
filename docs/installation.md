@@ -68,9 +68,22 @@ from the menu, or the Welcome window). This starts the Calamares installer.
   powered off. (`/boot` stays unencrypted so GRUB can start the system —
   the same scheme Fedora and Ubuntu use; it contains only the kernel and
   boot assets, no personal data.)
+* **Install alongside** (dual-boot) appears automatically when the
+  installer detects an existing OS (e.g. Windows) with resizable free
+  space. It shrinks that OS's partition and installs Argon beside it,
+  leaving the other system bootable from the GRUB menu. Before you start:
+  in Windows, **disable Fast Startup** (it leaves the disk locked) and back
+  up first, as with any repartitioning. On UEFI, both systems share the
+  existing EFI partition. (Argon's guided encryption is offered on the
+  erase-disk path, not alongside — encrypting only part of a shared disk
+  isn't supported here; use manual partitioning if you need that.)
 * **Manual partitioning** supports Btrfs and EXT4, encrypted or not,
   and any layout you like. A 512 MB EFI system partition is required on
   UEFI machines.
+* **Locale & keyboard.** Argon **never uses geolocation** to guess where
+  you are (no network lookup), so you set your region, timezone and
+  keyboard on those pages — each has a live preview. Defaults are a
+  starting point only.
 * Swap defaults to a small swap partition; choose *swap (with hibernate)*
   if you want suspend-to-disk.
 * No root account is created: the first user gets sudo. Autologin stays

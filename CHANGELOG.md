@@ -6,6 +6,18 @@ release tags.
 
 ## [Unreleased]
 
+### Changed — installer polish
+- Added Calamares module configs that were missing: `welcome.conf`
+  (requirement checks for storage/RAM/root; **the network connectivity
+  check is disabled** so the installer never pings out), `locale.conf` and
+  `keyboard.conf` (sane defaults with **geoip off** — Argon never
+  geolocates you — and interactive region/timezone/layout pages), and
+  `finished.conf` (offer-restart at the end).
+- Documented **install-alongside / dual-boot** (it appears automatically
+  when another OS with free space is detected) with the Windows Fast
+  Startup caveat, and clarified the locale/keyboard/geoip behaviour, in the
+  install guide.
+
 ### Added — Pulsemeeter (graphical Voicemeeter alternative)
 - Ships **Pulsemeeter**, a Voicemeeter-style graphical audio mixer/router
   for PipeWire, as a menu entry (Sound & Video). It's a PyPI app (not in
