@@ -1,0 +1,26 @@
+# Argon OS — Whisker Menu defaults (panel plugin 1, the menu button).
+#
+# The button icon is set explicitly to the Argon mark. Without this the
+# plugin falls back to the base distribution's logo (Kali's dragon), which
+# is what shipped in the panel corner before.
+#
+# This is the system default (XDG_CONFIG_DIRS); anything the user changes is
+# written to ~/.config/xfce4/panel/whiskermenu-1.rc and wins over it.
+
+button-icon=/usr/share/argon/argon-mono.png
+button-title=Applications
+button-single-row=false
+show-button-title=false
+show-button-icon=true
+
+# Sensible menu defaults: categories on the left, search at the top.
+launcher-show-name=true
+launcher-show-description=true
+category-show-name=true
+position-search-alternate=false
+position-commands-alternate=true
+position-categories-alternate=false
+favorites-in-recent=true
+hover-switch-category=false
+menu-width=450
+menu-height=500

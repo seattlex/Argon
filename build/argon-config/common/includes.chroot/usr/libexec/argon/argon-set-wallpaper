@@ -1,5 +1,5 @@
 #!/bin/sh
-# Argon OS — apply the default desktop wallpaper on every connected monitor.
+# Argon OS — seed the desktop wallpaper, without ever overriding the user's.
 #
 # Why this exists: xfdesktop stores the backdrop image per monitor, keyed by
 # the RandR *connector* name (Virtual-1, eDP-1, HDMI-1, ...). We can't know
@@ -7,13 +7,26 @@
 # provide a generic "monitor0" node — which xfdesktop ignores on any machine
 # whose real output is named otherwise, leaving the dark solid-colour fallback
 # (a black-looking screen). This runs at login and writes the wallpaper to the
-# actual connected outputs, so the image shows regardless of the name. Applies
-# to live and installed sessions alike.
+# actual connected outputs.
+#
+# IMPORTANT: it applies the Argon image as a DEFAULT, once. An earlier version
+# re-applied it on every login, which silently reset the wallpaper of anyone
+# who had picked their own — on every single reboot. So instead:
+#
+#   * first login (no marker) -> set the Argon wallpaper on every output,
+#                                then drop a marker
+#   * later logins            -> only fill in outputs that have NO backdrop
+#                                at all (e.g. a monitor plugged in since);
+#                                never touch one that already has an image
+#
+# To get the Argon default back, delete the marker and log in again:
+#   rm ~/.config/argon/wallpaper-initialized
 set -eu
 
 WALL=/usr/share/backgrounds/argon/argon-default.png
 [ -f "$WALL" ] || exit 0
 CHANNEL=xfce4-desktop
+MARKER="${XDG_CONFIG_HOME:-$HOME/.config}/argon/wallpaper-initialized"
 
 # image-style 5 = "Zoomed" (fill the screen, keep aspect).
 set_backdrop() {
@@ -24,6 +37,13 @@ set_backdrop() {
         || xfconf-query -c "$CHANNEL" -p "$base/image-style" -n -t int -s 5 2>/dev/null || true
 }
 
+# Does this output already have a wallpaper of its own?
+has_backdrop() {
+    val="$(xfconf-query -c "$CHANNEL" \
+            -p "/backdrop/screen0/monitor$1/workspace0/last-image" 2>/dev/null || true)"
+    [ -n "$val" ]
+}
+
 # Wait for X / xfconfd to come up.
 i=0
 while [ "$i" -lt 20 ]; do
@@ -32,6 +52,17 @@ while [ "$i" -lt 20 ]; do
     sleep 1
 done
 
+if [ -f "$MARKER" ]; then
+    # --- Subsequent logins: fill gaps only, never override ----------------
+    if command -v xrandr >/dev/null 2>&1; then
+        for out in $(xrandr --query 2>/dev/null | awk '/ connected/{print $1}'); do
+            has_backdrop "$out" || set_backdrop "$out"
+        done
+    fi
+    exit 0
+fi
+
+# --- First login: establish the Argon default -----------------------------
 did=0
 
 # Preferred: set the wallpaper for each *connected* RandR output by its real
@@ -57,5 +88,10 @@ done
 if [ "$did" -eq 0 ]; then
     set_backdrop 0
 fi
+
+# Remember that the default has been applied, so the user's own choice
+# survives every future login.
+mkdir -p "$(dirname "$MARKER")" 2>/dev/null || true
+: > "$MARKER" 2>/dev/null || true
 
 exit 0

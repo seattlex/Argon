@@ -101,6 +101,13 @@ cp -a "$REPO_ROOT/branding/plymouth/argon" "$CHROOT_INC/usr/share/plymouth/theme
 mkdir -p "$CHROOT_INC/usr/share/backgrounds/argon"
 cp -a "$REPO_ROOT/wallpapers/." "$CHROOT_INC/usr/share/backgrounds/argon/"
 
+# The mono Argon mark, used as the panel menu button icon (see
+# etc/xdg/xfce4/panel/whiskermenu-1.rc). Without this the button falls back
+# to the base distribution's logo, which is not Argon's.
+mkdir -p "$CHROOT_INC/usr/share/argon"
+cp "$REPO_ROOT/branding/logo/argon-mono.png" \
+   "$CHROOT_INC/usr/share/argon/argon-mono.png"
+
 # Installer: Calamares configuration and branding
 mkdir -p "$CHROOT_INC/etc/calamares"
 cp -a "$REPO_ROOT/installer/calamares/." "$CHROOT_INC/etc/calamares/"
