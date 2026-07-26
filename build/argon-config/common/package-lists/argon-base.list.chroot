@@ -90,10 +90,13 @@ gparted
 ## Btrfs snapshots + rollback (only active on btrfs installs; a first-boot
 ## service configures snapper, and an apt hook snapshots before every
 ## package transaction so a bad upgrade can be rolled back in one step).
-## grub-btrfs adds those snapshots to the boot menu; inotify-tools is what
-## its watcher daemon uses (a Recommends, and recommends are off).
+## grub-btrfs (which adds the snapshots to the boot menu) is NOT installed
+## here: its postinst runs grub-probe/grub-mkconfig, which cannot work in
+## the live-build chroot (no real root device). It belongs on the installed
+## system, so the first-boot snapshot setup installs it there instead.
+## inotify-tools is its watcher's dependency, staged now so that install is
+## quick/offline-friendlier.
 snapper
-grub-btrfs
 inotify-tools
 
 ## Secure Boot tooling (staging). The default boot chain is unchanged and

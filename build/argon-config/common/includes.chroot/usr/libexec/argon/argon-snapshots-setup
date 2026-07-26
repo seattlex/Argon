@@ -60,8 +60,22 @@ fi
 systemctl disable --now snapper-timeline.timer 2>/dev/null || true
 systemctl enable --now snapper-cleanup.timer 2>/dev/null || true
 
-# grub-btrfs: regenerate the snapshot boot entries now, and let its daemon
-# keep them current as snapshots come and go.
+# grub-btrfs adds the snapshots to the GRUB menu (boot one read-only to
+# preview before rolling back). It can't be installed in the live-build
+# chroot — its postinst runs grub-probe, which needs a real root device — so
+# it's installed here, on the running system, where that works. Best-effort:
+# if the machine is offline on this first boot, snapshots and `argon-snapshot
+# rollback` still work via snapper; the boot-menu entries just appear once
+# grub-btrfs is present (a later update or `argon-migrate` installs it).
+if ! command -v grub-mkconfig >/dev/null 2>&1; then
+    :
+elif ! dpkg-query -W -f='${Status}' grub-btrfs 2>/dev/null | grep -q "install ok installed"; then
+    log "installing grub-btrfs for boot-menu snapshot entries"
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -q grub-btrfs \
+        2>/dev/null || log "grub-btrfs not installed yet (offline?); snapshots still work"
+fi
+
+# Regenerate the boot entries and start the watcher, if grub-btrfs is here.
 if command -v grub-mkconfig >/dev/null 2>&1; then
     grub-mkconfig -o /boot/grub/grub.cfg 2>/dev/null || true
 fi
