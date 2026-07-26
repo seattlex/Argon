@@ -6,6 +6,121 @@ release tags.
 
 ## [Unreleased]
 
+### Changed — signed releases by default
+- CI now signs release checksums **automatically whenever a signing key is
+  configured**, for both tagged releases and the rolling snapshot (it was
+  tags-only before) — each ships a `.sha256.sig`. Enabled with a repo
+  secret (`ARGON_SIGNING_KEY_ASC`) + variable (`HAS_SIGNING_KEY=true`); with
+  no key the build still publishes, unsigned. Documented the setup and the
+  verify-signature-first flow in reproducible-builds.md; rolling release
+  notes now show the `gpg --verify` step.
+
+### Added — opt-in UEFI Secure Boot (Machine Owner Key), stage set
+- The default boot chain is **unchanged and unsigned** (so nothing can
+  break), but Argon now ships the tools (`mokutil`, `sbsigntool`) and an
+  opt-in `argon-secureboot-setup` that turns Secure Boot on the standard
+  MOK way: it installs Debian's Microsoft-signed shim + signed GRUB,
+  generates a per-machine key, signs the installed kernel, and enrols the
+  key via mokutil. A shipped kernel `postinst.d` hook re-signs future
+  kernels automatically — and is a **no-op until you opt in** (it does
+  nothing without the MOK). New [secure-boot.md](docs/secure-boot.md) walks
+  through it; the "disable Secure Boot" notes now point at it too.
+
+### Added — optional Wayland session (experimental)
+- A selectable **"Argon (Wayland)"** session at the login screen, for those
+  who want Wayland — a small labwc (wlroots) compositor with the Argon
+  wallpaper (swaybg), a waybar panel, a fuzzel launcher and sensible
+  keybinds, plus the network/Bluetooth/volume trays. XFCE on X11 remains
+  the default and is completely untouched; this is purely opt-in and marked
+  experimental. See [wayland.md](docs/wayland.md).
+
+### Changed — installer polish
+- Added Calamares module configs that were missing: `welcome.conf`
+  (requirement checks for storage/RAM/root; **the network connectivity
+  check is disabled** so the installer never pings out), `locale.conf` and
+  `keyboard.conf` (sane defaults with **geoip off** — Argon never
+  geolocates you — and interactive region/timezone/layout pages), and
+  `finished.conf` (offer-restart at the end).
+- Documented **install-alongside / dual-boot** (it appears automatically
+  when another OS with free space is detected) with the Windows Fast
+  Startup caveat, and clarified the locale/keyboard/geoip behaviour, in the
+  install guide.
+
+### Added — Pulsemeeter (graphical Voicemeeter alternative)
+- Ships **Pulsemeeter**, a Voicemeeter-style graphical audio mixer/router
+  for PipeWire, as a menu entry (Sound & Video). It's a PyPI app (not in
+  apt or Flathub), so `argon-pulsemeeter` installs it per-user with pipx on
+  first launch — isolated, no root, `--system-site-packages` so it uses the
+  system GTK — in a visible terminal, then just launches it thereafter.
+  Runtime prerequisites (`pipx`, `python3-venv`, `pulseaudio-utils` for
+  `pactl`) are on the image. The `argon-virtual-audio` CLI stays for a
+  scripted/no-GUI setup; audio-production.md now leads with Pulsemeeter.
+
+### Added — Flathub in Argon Software
+- Argon Software now has a **Flathub** category. Catalog entries can carry a
+  `flatpak` app-id instead of apt `packages`; those install as **per-user
+  Flatpaks** (no root, sandboxed) with the same one-click Install/Remove and
+  live log. Ships `flatpak` + the desktop portals; a first-boot service
+  (`argon-flathub-setup`, once the network is up) registers the Flathub
+  remote — it installs nothing and does nothing until you pick an app.
+- Seeded the category with Flatseal, Bottles, OBS Studio, Signal and GIMP.
+  apt remains preferred where an app is packaged (smaller, shared libs);
+  Flathub is there for latest releases and un-packaged apps.
+
+### Added — no-reinstall migration for older installs
+- `scripts/argon-migrate.sh`: brings an Argon system installed *before* the
+  updater/snapshots/audio fixes up to the current build without reinstalling
+  and without touching `/home`. Snapshots first (if Btrfs), installs the
+  packages newer images ship (including `dbus-user-session` and
+  `plymouth-label` — the audio and LUKS-prompt fixes), pulls Argon's system
+  integration from the repo tarball (single source of truth), installs the
+  latest `argon-apps` from the rolling release, then rebuilds the initramfs
+  and enables the services. Idempotent and best-effort throughout.
+- CI now publishes the `argon-apps_*.deb` on the rolling release so the
+  migration script (and manual installs) can fetch it. See
+  [migrating.md](docs/migrating.md).
+
+### Added — automatic Btrfs snapshots + one-step rollback
+- On a Btrfs install (the default), Argon now snapshots the root subvolume
+  **before every package change** via an apt `Pre-Invoke` hook, so a bad
+  upgrade can be undone. Built on the standard **snapper + grub-btrfs**
+  stack rather than hand-rolled: a first-boot service (`argon-snapshots-
+  setup`, installed systems only) configures snapper for `/`, and
+  grub-btrfs adds the snapshots to the boot menu so you can boot one
+  read-only to preview before committing.
+- No background timer — snapshots happen around `apt`, and the last 12 are
+  kept and auto-pruned. `/home` (a separate subvolume) is never part of a
+  snapshot, so rolling back never touches personal files. The whole thing
+  self-skips on ext4 and in the live session.
+- `argon-snapshot` CLI (`status` / `list` / `create` / `rollback`) and a
+  [snapshots guide](docs/snapshots.md). Rollback delegates to snapper's
+  tested `rollback` (which snapshots the current state first, so it's
+  itself undoable).
+
+### Added — Argon Update (one-click updates for existing installs)
+- New **Argon Update** app (menu → System, and a button on Argon Welcome):
+  **Check for updates** then **Update now**, with apt's progress streaming
+  live in the window. No terminal. It runs
+  `apt-get update && apt-get full-upgrade` through the *same*
+  polkit-authenticated helper Argon Software already uses — the helper
+  gained an `upgrade` action (no package arguments), so there is still one
+  audited privilege boundary. Security fixes keep installing themselves via
+  unattended-upgrades; this covers the feature/app updates that are held
+  back so the system never changes mid-session.
+- New [updates guide](docs/updates.md) explaining the rolling model,
+  the one-click flow, and the `apt full-upgrade` terminal equivalent.
+
+### Fixed — Security Edition CI build ran the runner out of disk
+- The Security Edition build kept dying with **"No space left on device"**
+  (confirmed from the runner's own crash trace). A GitHub-hosted runner
+  only leaves ~21 GB free on `/`, and `kali-linux-default`'s live-build
+  needs more. The job ran *inside* a Kali `container:`, so it couldn't
+  reach the host's ~30 GB of preinstalled toolchains to delete them. The
+  build now runs on the host (freeing Android SDK, .NET, GHC, the
+  hosted-tool cache, etc. first) and launches Kali via `docker run
+  --privileged` itself — same build, ~30 GB more scratch space. Root-owned
+  build outputs are chowned back so the release/publish steps still work.
+
 ### Fixed — no audio at all (missing `dbus-user-session`)
 - **The machine was silent.** PipeWire and WirePlumber were installed and
   their user services were enabled — but `wireplumber.service` died at
@@ -56,6 +171,20 @@ release tags.
   message is now in the README, install guide and troubleshooting guide
   with per-vendor firmware steps (incl. MSI) and the BitLocker caveat for
   dual-booters. A signed shim stays on the roadmap.
+
+### Fixed — Security Edition build exhausting runner disk
+- The first Security Edition CI build died silently partway through (~8 min
+  in, vs. the usual ~17; the "Build ISO" step never reached a terminal
+  state and no log was ever committed — the signature of the runner
+  process itself being killed, not a normal script failure). Root cause:
+  live-build's package cache (`--cache-packages`, on by default) keeps a
+  *second* copy of every downloaded `.deb` on disk purely so a later build
+  can skip re-downloading — but `build-iso.sh` runs `lb clean --purge`
+  before every single build, local or CI, so that reuse never happens and
+  the cache was pure duplication. Harmless normally; with
+  `kali-linux-default`'s much larger package set, likely enough to tip a
+  GitHub-hosted runner's disk over the edge. Disabled via
+  `--cache-packages false` in `auto/config`, for every variant.
 
 ### Added — Argon Security Edition (build variant)
 - New `security` build variant: the identical privacy-hardened OS plus

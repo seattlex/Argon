@@ -1,0 +1,43 @@
+#!/bin/sh
+# Argon OS — launch Pulsemeeter, installing it on first run.
+#
+# Pulsemeeter (https://github.com/theRealCarneiro/pulsemeeter) is the GUI
+# Voicemeeter-style mixer for PipeWire/PulseAudio. It isn't in the Debian/Kali
+# archive or on Flathub — upstream ships it on PyPI — so Argon installs it the
+# recommended way: per-user with pipx, isolated, no root, nothing touched
+# system-wide. First run installs it in a visible terminal so you see
+# progress; after that this just launches it.
+set -eu
+
+LOCAL_BIN="$HOME/.local/bin/pulsemeeter"
+
+launch() {
+    if [ -x "$LOCAL_BIN" ]; then
+        exec "$LOCAL_BIN" "$@"
+    elif command -v pulsemeeter >/dev/null 2>&1; then
+        exec pulsemeeter "$@"
+    fi
+    return 1
+}
+
+# Already installed? Just run it.
+launch "$@" || true
+
+if ! command -v pipx >/dev/null 2>&1; then
+    echo "Pulsemeeter needs pipx. Install it with:  sudo apt install pipx" >&2
+    exit 1
+fi
+
+# --system-site-packages lets the isolated app import the system PyGObject
+# (GTK) instead of trying to build it in the venv. $HOME is meant to expand
+# later, in the terminal's shell, not here.
+# shellcheck disable=SC2016
+INSTALL='pipx install --system-site-packages pulsemeeter && exec "$HOME/.local/bin/pulsemeeter"'
+
+TERM_EMU="$(command -v xfce4-terminal || command -v x-terminal-emulator || true)"
+if [ -n "$TERM_EMU" ]; then
+    exec "$TERM_EMU" -e "sh -lc '$INSTALL'"
+else
+    # No terminal available — install inline and launch.
+    sh -lc "$INSTALL"
+fi

@@ -1,0 +1,93 @@
+#!/bin/sh
+# Argon OS — friendly front-end to the system's Btrfs snapshots.
+#
+# Snapshots are taken automatically before every package change (see the apt
+# hook). This wraps the handful of things you'd actually want to do with
+# them, in plain language, on top of snapper.
+#
+# Usage:
+#   argon-snapshot status              is snapshotting active here?
+#   argon-snapshot list                show snapshots (newest last)
+#   argon-snapshot create [note]       take one now
+#   argon-snapshot rollback <number>   roll the system back to a snapshot
+#
+# rollback and create need root; the tool re-runs itself with sudo.
+
+set -eu
+
+PROG="argon-snapshot"
+
+need_root() {
+    if [ "$(id -u)" -ne 0 ]; then
+        exec sudo "$0" "$@"
+    fi
+}
+
+is_btrfs() { [ "$(stat -f -c %T / 2>/dev/null || echo x)" = "btrfs" ]; }
+
+configured() {
+    command -v snapper >/dev/null 2>&1 &&
+        snapper list-configs 2>/dev/null | grep -qw root
+}
+
+cmd_status() {
+    if ! is_btrfs; then
+        echo "Snapshots are not available: the root filesystem is not Btrfs."
+        echo "(Choose Btrfs in the installer to get automatic rollback.)"
+        return 0
+    fi
+    if configured; then
+        n="$(snapper -c root list 2>/dev/null | grep -c '^[0-9 ]*|' || echo 0)"
+        echo "Snapshots: ON. Argon snapshots the system before every package"
+        echo "change; $n kept. Roll back with: sudo $PROG rollback <number>"
+    else
+        echo "Snapshots: Btrfs detected but not configured yet."
+        echo "It's set up automatically on the first boot after install."
+    fi
+}
+
+cmd_list() {
+    configured || { echo "Snapshots are not configured on this system."; exit 1; }
+    snapper -c root list
+}
+
+cmd_create() {
+    need_root "$@"
+    configured || { echo "Snapshots are not configured on this system." >&2; exit 1; }
+    note="${1:-manual snapshot}"
+    snapper -c root create -t single -c number -d "$note" -u "argon=manual"
+    echo "Snapshot created."
+}
+
+cmd_rollback() {
+    need_root "$@"
+    configured || { echo "Snapshots are not configured on this system." >&2; exit 1; }
+    num="${1:-}"
+    case "$num" in
+        ''|*[!0-9]*) echo "usage: $PROG rollback <snapshot-number>" >&2; exit 2 ;;
+    esac
+    echo "Rolling back to snapshot $num."
+    echo "snapper takes a snapshot of the current state first, so this is"
+    echo "itself undoable. Reboot afterwards to run on the restored system."
+    snapper -c root rollback "$num"
+    echo
+    echo "Done. Reboot now to boot the rolled-back system:  sudo reboot"
+    echo "(Or pick an earlier snapshot from the GRUB menu at boot to preview"
+    echo " one read-only before committing.)"
+}
+
+action="${1:-status}"
+shift 2>/dev/null || true
+case "$action" in
+    status)   cmd_status ;;
+    list)     cmd_list ;;
+    create)   cmd_create "$@" ;;
+    rollback) cmd_rollback "$@" ;;
+    -h|--help|help)
+        sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+        ;;
+    *)
+        echo "usage: $PROG {status|list|create [note]|rollback <n>}" >&2
+        exit 2
+        ;;
+esac

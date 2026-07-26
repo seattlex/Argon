@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Update Argon
+Comment=Install the latest Argon and application updates
+Exec=argon-update
+Icon=system-software-update
+Terminal=false
+Categories=System;Settings;PackageManager;GTK;
+Keywords=update;upgrade;apt;software;system;

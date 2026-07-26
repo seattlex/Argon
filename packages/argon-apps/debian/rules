@@ -12,5 +12,7 @@ override_dh_install:
 execute_after_dh_fixperms:
 	chmod 0755 debian/argon-apps/usr/bin/argon-software
 	chmod 0755 debian/argon-apps/usr/bin/argon-welcome
+	chmod 0755 debian/argon-apps/usr/bin/argon-update
 	chmod 0755 debian/argon-apps/usr/bin/argon-virtual-audio
+	chmod 0755 debian/argon-apps/usr/bin/argon-pulsemeeter
 	chmod 0755 debian/argon-apps/usr/libexec/argon/argon-pkg-helper

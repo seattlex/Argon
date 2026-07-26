@@ -1,0 +1,14 @@
+[Unit]
+Description=Argon OS — register the Flathub remote (first boot, once online)
+ConditionPathExists=!/run/live/medium
+ConditionPathExists=!/var/lib/argon/flathub-configured
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/argon/argon-flathub-setup
+
+[Install]
+WantedBy=multi-user.target

@@ -91,6 +91,15 @@ systemctl disable cups-browsed.service 2>/dev/null || true
 # without it; it is enabled above. (An earlier revision both enabled and
 # then disabled it here — a no-op that left Bluetooth off.)
 
+# Btrfs snapshots: the first-boot setup service configures snapper on
+# installed btrfs systems (it self-skips on ext4/live). grub-btrfsd is
+# enabled by the setup service once snapshots exist, so it is not enabled
+# here.
+enable_unit argon-snapshots-setup.service
+# Flathub remote registration on first boot (once the network is up). Adds
+# no apps; just lets Argon Software offer Flathub. Self-skips in live.
+enable_unit argon-flathub-setup.service
+
 # Faster boot: NetworkManager-wait-online blocks boot until the network is
 # up (often many seconds) but nothing on a desktop needs to wait for it.
 # ModemManager probes serial devices at boot and is rarely needed.

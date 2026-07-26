@@ -21,28 +21,34 @@ contributor time and community feedback — see
 - ✔ **Packaging** — `argon-*` metapackages + signed APT repository.
 - ✔ **Quality of life** — media codecs, thumbnails, clipboard manager,
   night-light, zram + earlyoom, extra default apps.
+- ✔ **Argon Update** — one-click system updates for existing installs, and a
+  no-reinstall migration path for older ones.
+- ✔ **Automatic Btrfs snapshots** — snapshot before every update
+  (snapper + grub-btrfs), one-step rollback.
+- ✔ **Flatpak integration** — Flathub apps surfaced in Argon Software.
+- ✔ **Pulsemeeter** — graphical Voicemeeter-style audio mixer.
+- ✔ **Installer polish** — install-alongside/dual-boot guidance, locale/
+  keyboard defaults, geoip-off.
+- ✔ **Signed releases by default** — CI signs checksums (tags + rolling)
+  whenever a key is configured.
+- ✔ **Secure Boot (opt-in)** — Machine Owner Key path (`argon-secureboot-
+  setup`); signed shim + kernel out-of-the-box still to come.
+- ✔ **Wayland session (experimental)** — optional labwc session.
 
 ## Near term (0.x)
 
-- ◻ **Automatic Btrfs snapshots** — snapshot before updates so a bad
-  upgrade can be rolled back in one step.
-- ◻ **Flatpak integration** — Flathub apps alongside system packages,
-  surfaced in Argon Software.
 - ◻ **Reproducible builds, verified** — build against a snapshot mirror,
   publish the package manifest, and diff two independent builds
   (`diffoscope`) before release.
-- ◻ **Installer polish** — "install alongside" (dual-boot) guidance, more
-  locale/keyboard defaults.
+- ◻ **Secure Boot, out of the box** — a distro-signed (or Microsoft-signed)
+  boot chain so Secure Boot needs no MOK enrolment.
 
 ## Medium term (1.0)
 
-- ◻ **Secure Boot** — signed shim + kernel for out-of-the-box UEFI Secure
-  Boot.
 - ◻ **Sandboxed applications** — tighter AppArmor/bubblewrap confinement
   for browsers and risky apps.
-- ◻ **Wayland session** — an optional Wayland desktop.
-- ◻ **Signed releases by default** — published signing key + verified
-  release artifacts as the norm.
+- ◻ **Wayland session, first-class** — promote the experimental session, or
+  an XFCE/other Wayland desktop, to supported.
 
 ## Longer term
 

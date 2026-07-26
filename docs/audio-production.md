@@ -13,8 +13,17 @@ Audio** (no terminal needed), or `apt install` the package names given.
 
 ## Replacing Voicemeeter
 
-Voicemeeter is really three things: **virtual cables**, a **mixer/router**,
-and **effects** (EQ, compression). PipeWire provides all three.
+The closest single-app equivalent is **Pulsemeeter** — a Voicemeeter-style
+graphical mixer with virtual inputs/outputs, per-channel routing and volume,
+built for PipeWire. It's in the menu as **Pulsemeeter** (under Sound &
+Video); the first launch installs it per-user (isolated, no root) and opens
+it. That's the quickest way to get the Voicemeeter layout you're used to.
+
+Under the hood Voicemeeter is really three things: **virtual cables**, a
+**mixer/router**, and **effects** (EQ, compression). Pulsemeeter gives you
+the first two in one window; the sections below show how to build the same
+thing from PipeWire's own pieces (and where the effects come from) if you'd
+rather assemble it yourself or go deeper.
 
 ### Virtual cables — built into Argon
 
@@ -160,6 +169,7 @@ priority without extra configuration. To push latency lower:
 
 | Windows | On Argon |
 | --- | --- |
+| Voicemeeter (whole app) | **Pulsemeeter** (menu → Sound & Video) |
 | Voicemeeter virtual cables | `argon-virtual-audio enable` |
 | Voicemeeter routing/mixer | qpwgraph (or Helvum) |
 | Voicemeeter EQ/compression | EasyEffects |

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Pulsemeeter
+GenericName=Audio Mixer & Router
+Comment=Voicemeeter-style virtual audio mixer and router for PipeWire
+Exec=argon-pulsemeeter
+Icon=multimedia-volume-control
+Terminal=false
+Categories=AudioVideo;Audio;Mixer;GTK;
+Keywords=voicemeeter;audio;mixer;router;virtual;cable;pipewire;pulseaudio;

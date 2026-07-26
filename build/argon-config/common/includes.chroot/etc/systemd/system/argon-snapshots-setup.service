@@ -1,0 +1,20 @@
+[Unit]
+Description=Argon OS — configure Btrfs snapshots (first boot, installed systems)
+# Live sessions run off a squashfs, not Btrfs, so skip them outright.
+ConditionPathExists=!/run/live/medium
+# Runs until snapper's config exists, then this marker keeps it from
+# re-running on every boot.
+ConditionPathExists=!/var/lib/argon/snapshots-configured
+After=local-fs.target network-online.target
+# network-online is a soft want: it lets the one-time grub-btrfs install
+# succeed when possible, but snapper setup proceeds regardless if offline.
+Wants=local-fs.target network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/argon/argon-snapshots-setup
+ExecStartPost=/bin/sh -c 'mkdir -p /var/lib/argon && : > /var/lib/argon/snapshots-configured'
+
+[Install]
+WantedBy=multi-user.target

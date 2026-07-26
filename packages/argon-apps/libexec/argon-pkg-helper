@@ -6,7 +6,9 @@
 # exactly one action and a list of syntactically valid Debian package
 # names — nothing else — so the privilege boundary is easy to audit.
 #
-# Usage: argon-pkg-helper [--simulate] {install|remove} pkg [pkg...]
+# Usage:
+#   argon-pkg-helper [--simulate] {install|remove} pkg [pkg...]
+#   argon-pkg-helper [--simulate] upgrade        # whole-system update, no args
 
 set -eu
 
@@ -21,8 +23,20 @@ shift || true
 
 case "$ACTION" in
     install|remove) ;;
+    upgrade)
+        # A full-system update takes no package arguments. This is what
+        # "Update Argon" runs: refresh the lists, then dist-upgrade (which,
+        # on a rolling release, is the only correct upgrade — it lets the
+        # metapackages pull in and remove packages as the set evolves).
+        [ $# -eq 0 ] || { echo "error: upgrade takes no packages" >&2; exit 2; }
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -q
+        # shellcheck disable=SC2086  # $SIMULATE is intentionally empty or -s
+        exec apt-get full-upgrade -y -q $SIMULATE \
+            -o APT::Get::Always-Include-Phased-Updates=true
+        ;;
     *)
-        echo "usage: argon-pkg-helper [--simulate] {install|remove} pkg..." >&2
+        echo "usage: argon-pkg-helper [--simulate] {install|remove} pkg... | upgrade" >&2
         exit 2
         ;;
 esac

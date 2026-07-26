@@ -1,0 +1,88 @@
+#!/bin/sh
+# Argon OS — opt in to UEFI Secure Boot with a Machine Owner Key (MOK).
+#
+# EXPERIMENTAL. Argon follows Kali and ships an unsigned kernel, so Secure
+# Boot is off out of the box. This sets up the standard MOK path so you can
+# turn it on:
+#   1. installs Debian's Microsoft-signed shim + signed GRUB (shim validates
+#      what it chains to),
+#   2. generates a key that belongs to *this machine*,
+#   3. signs the installed kernel(s) with it (and a hook re-signs future
+#      kernel updates automatically), and
+#   4. enrols the key via mokutil.
+#
+# After it runs you REBOOT, confirm the key in the blue "MOK Manager" screen
+# (you'll set a one-time password here), then turn Secure Boot on in your
+# firmware. This does not change how the machine boots until you do that, so
+# it's safe to set up ahead of time.
+set -eu
+
+KEYDIR=/var/lib/argon/secureboot
+
+die() { echo "argon-secureboot-setup: $*" >&2; exit 1; }
+
+[ "$(id -u)" -eq 0 ] || die "run with sudo"
+[ -d /sys/firmware/efi ] || die "this machine booted in BIOS/legacy mode, not UEFI — Secure Boot does not apply"
+
+echo "This will set up Machine Owner Key signing for Secure Boot."
+echo "It installs shim/signed-grub, signs your kernel, and enrols a key."
+printf 'Continue? [y/N] '
+read -r ans
+case "$ans" in y|Y|yes|YES) ;; *) echo "Aborted."; exit 0 ;; esac
+
+echo "==> Installing the signed boot chain (shim + signed GRUB)"
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -q || true
+apt-get install -y -q shim-signed grub-efi-amd64-signed mokutil sbsigntool \
+    || die "could not install the signed boot chain"
+
+echo "==> Generating this machine's key"
+mkdir -p "$KEYDIR"
+chmod 700 "$KEYDIR"
+if [ ! -f "$KEYDIR/MOK.key" ]; then
+    openssl req -new -x509 -newkey rsa:2048 -nodes -days 3650 \
+        -subj "/CN=Argon OS Machine Owner Key/" \
+        -keyout "$KEYDIR/MOK.key" -out "$KEYDIR/MOK.crt" \
+        || die "key generation failed"
+    openssl x509 -in "$KEYDIR/MOK.crt" -outform DER -out "$KEYDIR/MOK.der"
+    chmod 600 "$KEYDIR"/MOK.*
+    echo "    key created in $KEYDIR"
+else
+    echo "    reusing existing key in $KEYDIR"
+fi
+
+echo "==> Signing installed kernel(s)"
+signed_any=0
+for k in /boot/vmlinuz-*; do
+    [ -f "$k" ] || continue
+    sbverify --cert "$KEYDIR/MOK.crt" "$k" >/dev/null 2>&1 && continue
+    if sbsign --key "$KEYDIR/MOK.key" --cert "$KEYDIR/MOK.crt" \
+              --output "$k.tmp" "$k" 2>/dev/null; then
+        mv "$k.tmp" "$k"; echo "    signed $k"; signed_any=1
+    fi
+done
+[ "$signed_any" -eq 1 ] || echo "    (kernels already signed)"
+
+echo "==> Enrolling the key (you'll choose a one-time password now)"
+echo "    You'll re-enter this password in the MOK Manager screen at reboot."
+mokutil --import "$KEYDIR/MOK.der" || die "mokutil import failed"
+
+cat <<'EOF'
+
+======================================================================
+ Almost done. Next:
+
+ 1. Reboot.  A blue "MOK Management" screen appears.
+    Choose "Enroll MOK" -> "Continue" -> "Yes", enter the password you
+    just set, then reboot again.
+
+ 2. Enter your firmware setup (Del/F2 at power-on) and turn
+    Secure Boot ON.
+
+ Future kernel updates are re-signed automatically. To undo this, run:
+    sudo mokutil --delete /var/lib/argon/secureboot/MOK.der
+ and turn Secure Boot back off.
+
+ Full walkthrough:  https://github.com/seattlex/argon/blob/main/docs/secure-boot.md
+======================================================================
+EOF

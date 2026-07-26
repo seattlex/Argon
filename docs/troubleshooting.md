@@ -23,8 +23,8 @@ system too — re-enabling it later blocks the installed Argon the same way.
 Dual-booters: disabling Secure Boot does not break Windows; BitLocker may
 ask for its recovery key once after the change, so have it available.
 
-A properly signed shim (boot with Secure Boot enabled, no firmware
-changes) is on the [roadmap](roadmap.md).
+Want Secure Boot *on* instead? Argon has an opt-in Machine Owner Key path —
+see [secure-boot.md](secure-boot.md).
 
 ## Encrypted install: black/stuck screen at boot — where is the passphrase prompt?
 

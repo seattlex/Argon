@@ -1,10 +1,14 @@
 bin/argon-software usr/bin
 bin/argon-welcome usr/bin
+bin/argon-update usr/bin
 bin/argon-virtual-audio usr/bin
+bin/argon-pulsemeeter usr/bin
 libexec/argon-pkg-helper usr/libexec/argon
 data/software-catalog.json usr/share/argon
 data/argon-software.desktop usr/share/applications
 data/argon-welcome.desktop usr/share/applications
+data/argon-update.desktop usr/share/applications
+data/argon-pulsemeeter.desktop usr/share/applications
 data/org.argon.pkg-helper.policy usr/share/polkit-1/actions
 data/icons/48x48/argon.png usr/share/icons/hicolor/48x48/apps
 data/icons/64x64/argon.png usr/share/icons/hicolor/64x64/apps

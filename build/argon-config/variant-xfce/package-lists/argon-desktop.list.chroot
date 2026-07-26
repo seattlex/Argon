@@ -109,8 +109,25 @@ redshift-gtk
 bluez
 blueman
 
+## Optional Wayland session (experimental). XFCE X11 stays the default; this
+## adds a selectable "Argon (Wayland)" session at the login screen for those
+## who want it — labwc (a small wlroots compositor) with a waybar panel,
+## swaybg wallpaper and a fuzzel launcher. Terminal/apps run under XWayland.
+labwc
+waybar
+swaybg
+fuzzel
+
 ## A little flash — fast, pretty system-info in the terminal
 fastfetch
+
+## Pulsemeeter (GUI Voicemeeter alternative) installs per-user via pipx on
+## first launch — these are its runtime prerequisites. pipx does the
+## isolated install; pulseaudio-utils gives it pactl to drive PipeWire's
+## Pulse layer; python3-venv is what pipx builds the environment with.
+pipx
+python3-venv
+pulseaudio-utils
 
 ## Faster & lighter — compressed RAM swap + OOM protection on low-memory boxes
 zram-tools
@@ -120,6 +137,14 @@ earlyoom
 galculator
 baobab
 atril
+
+## Flatpak — optional sandboxed apps from Flathub, surfaced in Argon
+## Software. Nothing is installed by default; a first-boot service just adds
+## the Flathub remote, and Argon Software installs flatpaks per-user (no
+## root). xdg-desktop-portal-gtk lets sandboxed apps open files/links.
+flatpak
+xdg-desktop-portal
+xdg-desktop-portal-gtk
 
 ## Installer (live session only)
 calamares

@@ -1,0 +1,84 @@
+#!/bin/sh
+# Argon OS — configure Btrfs snapshots on first boot of an installed system.
+#
+# Runs once (via argon-snapshots-setup.service). It only does anything when
+# the root filesystem is Btrfs — plain-ext4 or live installs are a no-op, so
+# the same image is safe everywhere. It sets up snapper for the root
+# subvolume so the apt hook (80argon-snapshot) can snapshot before every
+# package change, and points grub-btrfs at those snapshots for one-step
+# rollback from the boot menu.
+set -eu
+
+log() { echo "argon-snapshots-setup: $*"; }
+
+# Root must be Btrfs. `stat -f` reports the filesystem type.
+fstype="$(stat -f -c %T / 2>/dev/null || echo unknown)"
+if [ "$fstype" != "btrfs" ]; then
+    log "root is $fstype, not btrfs — nothing to do"
+    exit 0
+fi
+
+if ! command -v snapper >/dev/null 2>&1; then
+    log "snapper not installed — skipping"
+    exit 0
+fi
+
+# Create the 'root' config once. This also creates the /.snapshots
+# subvolume where snapshots live.
+if ! snapper list-configs 2>/dev/null | grep -qw root; then
+    log "creating snapper config for /"
+    snapper -c root create-config / || {
+        log "create-config failed — leaving snapshots off"
+        exit 0
+    }
+fi
+
+CONF=/etc/snapper/configs/root
+if [ -f "$CONF" ]; then
+    set_conf() {
+        key="$1"; val="$2"
+        if grep -q "^${key}=" "$CONF"; then
+            sed -i "s|^${key}=.*|${key}=\"${val}\"|" "$CONF"
+        else
+            echo "${key}=\"${val}\"" >> "$CONF"
+        fi
+    }
+    # Argon takes snapshots *around apt*, not on a background timer — no
+    # hourly churn, nothing running when you're not changing packages.
+    set_conf TIMELINE_CREATE "no"
+    set_conf NUMBER_CLEANUP "yes"
+    set_conf NUMBER_LIMIT "12"
+    set_conf NUMBER_LIMIT_IMPORTANT "6"
+    # Let the first human user (uid 1000) list/compare snapshots without sudo.
+    primary="$(getent passwd 1000 | cut -d: -f1 || true)"
+    [ -n "$primary" ] && set_conf ALLOW_USERS "$primary"
+    log "snapper config tuned (apt-driven, keep last 12)"
+fi
+
+# Timeline snapshots off; keep only the cleanup timer so old snapshots are
+# pruned to the limits above.
+systemctl disable --now snapper-timeline.timer 2>/dev/null || true
+systemctl enable --now snapper-cleanup.timer 2>/dev/null || true
+
+# grub-btrfs adds the snapshots to the GRUB menu (boot one read-only to
+# preview before rolling back). It can't be installed in the live-build
+# chroot — its postinst runs grub-probe, which needs a real root device — so
+# it's installed here, on the running system, where that works. Best-effort:
+# if the machine is offline on this first boot, snapshots and `argon-snapshot
+# rollback` still work via snapper; the boot-menu entries just appear once
+# grub-btrfs is present (a later update or `argon-migrate` installs it).
+if ! command -v grub-mkconfig >/dev/null 2>&1; then
+    :
+elif ! dpkg-query -W -f='${Status}' grub-btrfs 2>/dev/null | grep -q "install ok installed"; then
+    log "installing grub-btrfs for boot-menu snapshot entries"
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -q grub-btrfs \
+        2>/dev/null || log "grub-btrfs not installed yet (offline?); snapshots still work"
+fi
+
+# Regenerate the boot entries and start the watcher, if grub-btrfs is here.
+if command -v grub-mkconfig >/dev/null 2>&1; then
+    grub-mkconfig -o /boot/grub/grub.cfg 2>/dev/null || true
+fi
+systemctl enable --now grub-btrfsd.service 2>/dev/null || true
+
+log "done"

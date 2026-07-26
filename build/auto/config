@@ -25,6 +25,17 @@ if [ -z "${SOURCE_DATE_EPOCH:-}" ] && command -v git >/dev/null 2>&1 \
     export SOURCE_DATE_EPOCH
 fi
 
+# --cache-packages false: live-build's package cache (default on) keeps a
+# second copy of every downloaded .deb under build/cache/packages/, purely
+# so a *later* build can skip re-downloading. scripts/build-iso.sh runs
+# `lb clean --purge` before every single build, local or CI, so that reuse
+# never happens here — the cache is pure disk waste, doubling how much of
+# the package set sits on disk during the build. Harmless to disable for
+# every variant; it became load-bearing for the Security Edition, whose
+# kali-linux-default package set is large enough that the duplication was
+# enough to exhaust a GitHub-hosted runner's disk mid-build (the job died
+# silently, consistent with the runner process itself being OOM/disk killed
+# rather than a normal build error).
 lb config noauto \
     --distribution kali-rolling \
     --debian-installer none \
@@ -47,4 +58,5 @@ lb config noauto \
     --bootappend-live "boot=live components quiet splash hostname=argon live-config.hostname=argon apparmor=1 security=apparmor" \
     --memtest none \
     --zsync false \
+    --cache-packages false \
     "$@"
