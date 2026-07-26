@@ -51,4 +51,32 @@ fi
 
 chown -R argon:argon /home/argon 2>/dev/null || true
 
-echo "argon: live user 'argon' ready (uid $(id -u argon))"
+# --- Prove the account is actually usable -------------------------------
+# "argon / argon didn't work" has been reported more than once, and the
+# only way to stop guessing about it is to assert the account state here,
+# at build time, instead of discovering it on someone's laptop.
+#
+# `passwd -S` reports the password status in field 2:
+#   P  = usable password set     L = locked     NP = no password
+# Anything but P means the login in the docs cannot work, so fail the build
+# rather than ship an image nobody can log into.
+status="$(passwd -S argon 2>/dev/null | awk '{print $2}')"
+case "$status" in
+    P) ;;
+    *)
+        echo "argon: ERROR live user 'argon' has password status '${status:-unknown}'," >&2
+        echo "argon: expected 'P' (usable password). The documented" >&2
+        echo "argon: argon/argon login would not work — refusing to build." >&2
+        exit 1
+        ;;
+esac
+
+# The login shell must exist, or authentication succeeds and the session
+# still dies immediately.
+shell="$(getent passwd argon | cut -d: -f7)"
+if [ ! -x "$shell" ]; then
+    echo "argon: ERROR login shell '$shell' is missing or not executable" >&2
+    exit 1
+fi
+
+echo "argon: live user 'argon' ready (uid $(id -u argon), password status P, shell $shell)"
