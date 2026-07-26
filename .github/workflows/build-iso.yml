@@ -199,6 +199,13 @@ jobs:
             rm -f "$name"
             ls -l ./*.part*
           fi
+          # Also publish the argon-apps .deb so scripts/argon-migrate.sh can
+          # fetch it to bring older installs up to date. Only from the xfce
+          # build (it's desktop-independent; no need to duplicate per edition).
+          if [ "$variant" = "xfce" ]; then
+            deb=$(ls ../packages/dist/argon-apps_*_all.deb 2>/dev/null | sort -V | tail -n1 || true)
+            [ -n "$deb" ] && cp -f "$deb" . && echo "staged $(basename "$deb")"
+          fi
 
       - name: Publish rolling snapshot
         if: github.ref_type != 'tag' && success()
@@ -213,6 +220,7 @@ jobs:
             iso/argon-*rolling-amd64.iso
             iso/argon-*rolling-amd64.iso.sha256
             iso/argon-*rolling-amd64.iso.part*
+            iso/argon-apps_*_all.deb
           body: |
             ## Argon OS — rolling snapshot
 

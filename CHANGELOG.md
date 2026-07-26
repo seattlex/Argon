@@ -6,6 +6,19 @@ release tags.
 
 ## [Unreleased]
 
+### Added — no-reinstall migration for older installs
+- `scripts/argon-migrate.sh`: brings an Argon system installed *before* the
+  updater/snapshots/audio fixes up to the current build without reinstalling
+  and without touching `/home`. Snapshots first (if Btrfs), installs the
+  packages newer images ship (including `dbus-user-session` and
+  `plymouth-label` — the audio and LUKS-prompt fixes), pulls Argon's system
+  integration from the repo tarball (single source of truth), installs the
+  latest `argon-apps` from the rolling release, then rebuilds the initramfs
+  and enables the services. Idempotent and best-effort throughout.
+- CI now publishes the `argon-apps_*.deb` on the rolling release so the
+  migration script (and manual installs) can fetch it. See
+  [migrating.md](docs/migrating.md).
+
 ### Added — automatic Btrfs snapshots + one-step rollback
 - On a Btrfs install (the default), Argon now snapshots the root subvolume
   **before every package change** via an apt `Pre-Invoke` hook, so a bad

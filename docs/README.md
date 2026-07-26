@@ -9,6 +9,7 @@
 | [applications.md](applications.md) | Argon Software (the app store) and Argon Welcome |
 | [updates.md](updates.md) | Keeping Argon current (automatic security fixes + one-click updates) |
 | [snapshots.md](snapshots.md) | Btrfs snapshots + one-step rollback of a bad update |
+| [migrating.md](migrating.md) | Upgrading an older install to the current build (no reinstall) |
 | [audio-production.md](audio-production.md) | Voicemeeter, FL Studio and VST plugins on Argon (PipeWire) |
 | [hardening.md](hardening.md) | Security defaults: what is enabled, why, and how to adjust it |
 | [privacy.md](privacy.md) | Privacy defaults: DNS, MAC randomization, browser, time sync |
