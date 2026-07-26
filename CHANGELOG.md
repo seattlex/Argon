@@ -6,6 +6,15 @@ release tags.
 
 ## [Unreleased]
 
+### Changed — signed releases by default
+- CI now signs release checksums **automatically whenever a signing key is
+  configured**, for both tagged releases and the rolling snapshot (it was
+  tags-only before) — each ships a `.sha256.sig`. Enabled with a repo
+  secret (`ARGON_SIGNING_KEY_ASC`) + variable (`HAS_SIGNING_KEY=true`); with
+  no key the build still publishes, unsigned. Documented the setup and the
+  verify-signature-first flow in reproducible-builds.md; rolling release
+  notes now show the `gpg --verify` step.
+
 ### Added — opt-in UEFI Secure Boot (Machine Owner Key), stage set
 - The default boot chain is **unchanged and unsigned** (so nothing can
   break), but Argon now ships the tools (`mokutil`, `sbsigntool`) and an

@@ -122,8 +122,12 @@ jobs:
       #   * any other build -> the single, overwritten "rolling" pre-release
       # so ISO storage stays bounded no matter how often the build runs.
 
+      # Signing is on by default: whenever the signing key is configured
+      # (repo variable HAS_SIGNING_KEY + secret ARGON_SIGNING_KEY_ASC), it
+      # runs for BOTH tagged releases and the rolling snapshot — not just
+      # tags. Without the key the build still publishes, just unsigned.
       - name: Import release signing key
-        if: github.ref_type == 'tag' && vars.HAS_SIGNING_KEY == 'true'
+        if: vars.HAS_SIGNING_KEY == 'true'
         env:
           SIGNING_KEY: ${{ secrets.ARGON_SIGNING_KEY_ASC }}
         run: |
@@ -207,6 +211,17 @@ jobs:
             [ -n "$deb" ] && cp -f "$deb" . && echo "staged $(basename "$deb")"
           fi
 
+      # Sign the rolling checksum(s) too, so the snapshot is verifiable the
+      # same way a tagged release is — not just the tags.
+      - name: Sign rolling snapshot
+        if: github.ref_type != 'tag' && success() && vars.HAS_SIGNING_KEY == 'true'
+        run: |
+          cd iso
+          for f in *.sha256; do
+            gpg --batch --armor --detach-sign --output "$f.sig" "$f"
+            echo "signed $f"
+          done
+
       - name: Publish rolling snapshot
         if: github.ref_type != 'tag' && success()
         uses: softprops/action-gh-release@v2
@@ -219,6 +234,7 @@ jobs:
           files: |
             iso/argon-*rolling-amd64.iso
             iso/argon-*rolling-amd64.iso.sha256
+            iso/argon-*rolling-amd64.iso.sha256.sig
             iso/argon-*rolling-amd64.iso.part*
             iso/argon-apps_*_all.deb
           body: |
@@ -243,5 +259,10 @@ jobs:
             ### Verify your download
             ```
             sha256sum -c argon-rolling-amd64.iso.sha256
+            ```
+            When a `.sha256.sig` is present, check the signature first
+            (see [verifying a release](https://github.com/seattlex/argon/blob/main/docs/reproducible-builds.md#verifying-a-release-current-state)):
+            ```
+            gpg --verify argon-rolling-amd64.iso.sha256.sig argon-rolling-amd64.iso.sha256
             ```
             (For split editions, verify after reassembling.)

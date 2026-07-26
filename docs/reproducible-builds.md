@@ -34,9 +34,30 @@ Being honest about the gap:
 ## Verifying a release (current state)
 
 ```sh
-sha256sum -c argon-<version>-xfce-amd64.iso.sha256
-gpg --verify argon-<version>-xfce-amd64.iso.sha256.sig
+gpg --verify argon-<version>-xfce-amd64.iso.sha256.sig \
+            argon-<version>-xfce-amd64.iso.sha256    # signature over the checksum
+sha256sum -c argon-<version>-xfce-amd64.iso.sha256    # checksum over the image
 ```
+
+Verify the signature **first**: it proves the checksum file itself wasn't
+tampered with, and only then does matching the checksum mean anything.
+(Import Argon's signing key once, from the source published on the releases
+page / project site, before the first verify.)
+
+## Signing is on by default
+
+Every build signs its checksums automatically when a signing key is
+configured — **both** tagged releases and the rolling snapshot carry a
+`.sha256.sig`. Maintainers enable it once by setting two things on the
+repository:
+
+* a secret **`ARGON_SIGNING_KEY_ASC`** — the ASCII-armoured private signing
+  key, and
+* a variable **`HAS_SIGNING_KEY`** set to `true`.
+
+With those present the CI imports the key and signs; without them the build
+still publishes, just unsigned. Nothing about the key material lives in the
+repository.
 
 ## Roadmap
 
