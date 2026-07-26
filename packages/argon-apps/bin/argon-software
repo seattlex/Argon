@@ -37,6 +37,35 @@ def load_catalog():
     raise FileNotFoundError("no software catalog found")
 
 
+def app_is_flatpak(app):
+    """A catalog entry with a "flatpak" app-id installs from Flathub."""
+    return bool(app.get("flatpak"))
+
+
+def flatpak_installed(app_id):
+    """True if the Flatpak app is installed (user or system scope)."""
+    if shutil.which("flatpak") is None:
+        return False
+    for scope in ("--user", "--system"):
+        try:
+            r = subprocess.run(["flatpak", "info", scope, app_id],
+                               capture_output=True, check=False)
+        except OSError:
+            return False
+        if r.returncode == 0:
+            return True
+    return False
+
+
+def flatpak_command(action, app_id):
+    # Per-user installs need no root/pkexec — the privacy-friendly default.
+    # --noninteractive so it streams cleanly into the log pane.
+    if action == "install":
+        return ["flatpak", "install", "--user", "-y", "--noninteractive",
+                "flathub", app_id]
+    return ["flatpak", "uninstall", "--user", "-y", "--noninteractive", app_id]
+
+
 def installed_state(packages):
     """Return {package: bool} for a list of package names."""
     if not packages:
@@ -96,9 +125,14 @@ class AppRow(Gtk.ListBoxRow):
         summary.set_ellipsize(Pango.EllipsizeMode.END)
         text.pack_start(name, False, False, 0)
         text.pack_start(summary, False, False, 0)
-        if len(app["packages"]) > 1:
+        pkgs = app.get("packages", [])
+        if app_is_flatpak(app):
+            detail = Gtk.Label(label="Flatpak · Flathub", xalign=0)
+            detail.get_style_context().add_class("dim-label")
+            text.pack_start(detail, False, False, 0)
+        elif len(pkgs) > 1:
             detail = Gtk.Label(
-                label="Bundle · {} packages".format(len(app["packages"])),
+                label="Bundle · {} packages".format(len(pkgs)),
                 xalign=0)
             detail.get_style_context().add_class("dim-label")
             text.pack_start(detail, False, False, 0)
@@ -139,7 +173,8 @@ class AppRow(Gtk.ListBoxRow):
     def matches(self, needle):
         hay = " ".join([
             self.app["name"], self.app.get("summary", ""),
-            " ".join(self.app["packages"]),
+            " ".join(self.app.get("packages", [])),
+            self.app.get("flatpak", ""),
         ]).lower()
         return needle in hay
 
@@ -230,15 +265,26 @@ class SoftwareWindow(Gtk.ApplicationWindow):
 
     # --- package state ------------------------------------------------------
     def _refresh_states(self):
-        all_pkgs = set()
+        # apt entries: one batched dpkg query. flatpak entries: checked
+        # individually. Both resolve to a per-row installed boolean.
+        apt_pkgs = set()
         for row in self.rows:
-            all_pkgs.update(row.app["packages"])
-        state = installed_state(sorted(all_pkgs))
-        GLib.idle_add(self._apply_states, state)
+            if not app_is_flatpak(row.app):
+                apt_pkgs.update(row.app.get("packages", []))
+        state = installed_state(sorted(apt_pkgs))
+        results = {}
+        for row in self.rows:
+            if app_is_flatpak(row.app):
+                results[id(row)] = flatpak_installed(row.app["flatpak"])
+            else:
+                pkgs = row.app.get("packages", [])
+                results[id(row)] = bool(pkgs) and all(
+                    state.get(p) for p in pkgs)
+        GLib.idle_add(self._apply_states, results)
 
-    def _apply_states(self, state):
+    def _apply_states(self, results):
         for row in self.rows:
-            row.set_installed(all(state.get(p) for p in row.app["packages"]))
+            row.set_installed(results.get(id(row), False))
         return False
 
     # --- install / remove -----------------------------------------------------
@@ -249,12 +295,19 @@ class SoftwareWindow(Gtk.ApplicationWindow):
         row.set_busy(True)
         self.revealer.set_reveal_child(True)
         self._log_clear()
-        self._log_line("$ {} {}\n".format(action, " ".join(row.app["packages"])))
+        if app_is_flatpak(row.app):
+            target = "flatpak {}".format(row.app["flatpak"])
+        else:
+            target = " ".join(row.app.get("packages", []))
+        self._log_line("$ {} {}\n".format(action, target))
         threading.Thread(
             target=self._run_operation, args=(row, action), daemon=True).start()
 
     def _run_operation(self, row, action):
-        cmd = helper_command(action, row.app["packages"])
+        if app_is_flatpak(row.app):
+            cmd = flatpak_command(action, row.app["flatpak"])
+        else:
+            cmd = helper_command(action, row.app.get("packages", []))
         try:
             proc = subprocess.Popen(
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -272,7 +325,9 @@ class SoftwareWindow(Gtk.ApplicationWindow):
         self.op_running = False
         if code == 0:
             self._log_line("\nDone.\n")
-            if not SIMULATE:
+            # SIMULATE only affects apt (apt -s changes nothing); flatpak
+            # ops always run for real, so always reflect their new state.
+            if not SIMULATE or app_is_flatpak(row.app):
                 row.set_installed(action == "install")
             GLib.timeout_add_seconds(
                 2, lambda: self.revealer.set_reveal_child(False) or False)

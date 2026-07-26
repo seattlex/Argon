@@ -121,6 +121,14 @@ galculator
 baobab
 atril
 
+## Flatpak — optional sandboxed apps from Flathub, surfaced in Argon
+## Software. Nothing is installed by default; a first-boot service just adds
+## the Flathub remote, and Argon Software installs flatpaks per-user (no
+## root). xdg-desktop-portal-gtk lets sandboxed apps open files/links.
+flatpak
+xdg-desktop-portal
+xdg-desktop-portal-gtk
+
 ## Installer (live session only)
 calamares
 # unsquashfs — Calamares' unpackfs step unpacks the live filesystem.squashfs

@@ -27,6 +27,17 @@ changes. Set `ARGON_CATALOG=/path` to test an alternate catalog, or
 `ARGON_SOFTWARE_SIMULATE=1` to exercise the UI with `apt-get -s` (no real
 changes).
 
+### Flathub
+
+Argon Software has a **Flathub** category. Those apps install as
+**Flatpaks, per-user** — no root, sandboxed, and always the latest upstream
+release — right alongside the apt-based catalog, with the same one-click
+Install/Remove. Nothing Flatpak is preinstalled; a first-boot service just
+registers the Flathub remote (it adds no apps and does nothing until you
+install one). Prefer the apt version of an app when there is one — it's
+smaller and shares system libraries; reach for Flathub when you want the
+newest release or an app that isn't packaged.
+
 ### About security tooling
 
 Argon is Kali-based, so the entire Kali archive is reachable with `apt`.

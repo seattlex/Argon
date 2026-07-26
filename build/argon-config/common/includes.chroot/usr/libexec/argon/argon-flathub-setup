@@ -1,0 +1,20 @@
+#!/bin/sh
+# Argon OS — add the Flathub remote (system scope) once, after first boot.
+#
+# Nothing is installed — this only registers Flathub so Argon Software (and
+# `flatpak install`) can offer apps from it. Per-user installs then work with
+# no root. Runs after the network is up; idempotent, and only marks itself
+# done on success so a first boot without network retries next time.
+set -eu
+
+command -v flatpak >/dev/null 2>&1 || exit 0
+
+if flatpak remote-add --if-not-exists flathub \
+     https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null; then
+    mkdir -p /var/lib/argon
+    : > /var/lib/argon/flathub-configured
+    echo "argon-flathub-setup: Flathub remote registered"
+else
+    echo "argon-flathub-setup: could not reach Flathub yet; will retry" >&2
+    exit 0
+fi

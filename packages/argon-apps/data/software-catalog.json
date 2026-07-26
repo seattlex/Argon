@@ -117,9 +117,19 @@
       "icon": "applications-system",
       "apps": [
         { "id": "gnome-disks", "name": "Disks", "summary": "Manage drives, partitions and disk images", "icon": "org.gnome.DiskUtility", "packages": ["gnome-disk-utility"] },
-        { "id": "timeshift", "name": "Timeshift", "summary": "System snapshots — undo a broken update", "icon": "timeshift", "packages": ["timeshift"] },
-        { "id": "flatpak", "name": "Flatpak", "summary": "Run sandboxed apps from Flathub alongside system packages", "icon": "system-software-install", "packages": ["flatpak"] },
         { "id": "virt-manager", "name": "Virtual Machine Manager", "summary": "Create and run virtual machines (KVM)", "icon": "virt-manager", "packages": ["virt-manager"] }
+      ]
+    },
+    {
+      "id": "flathub",
+      "name": "Flathub",
+      "icon": "system-software-install",
+      "apps": [
+        { "id": "fp-flatseal", "name": "Flatseal", "summary": "Manage the permissions of your Flatpak apps", "icon": "com.github.tchx84.Flatseal", "flatpak": "com.github.tchx84.Flatseal" },
+        { "id": "fp-bottles", "name": "Bottles", "summary": "Run Windows software in tidy, isolated environments", "icon": "com.usebottles.bottles", "flatpak": "com.usebottles.bottles" },
+        { "id": "fp-obs", "name": "OBS Studio", "summary": "Screen recording and live streaming (latest, from Flathub)", "icon": "com.obsproject.Studio", "flatpak": "com.obsproject.Studio" },
+        { "id": "fp-signal", "name": "Signal", "summary": "Private end-to-end encrypted messenger", "icon": "org.signal.Signal", "flatpak": "org.signal.Signal" },
+        { "id": "fp-gimp", "name": "GIMP", "summary": "Full image editor (latest release, from Flathub)", "icon": "org.gimp.GIMP", "flatpak": "org.gimp.GIMP" }
       ]
     }
   ]

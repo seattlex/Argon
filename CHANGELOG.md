@@ -6,6 +6,17 @@ release tags.
 
 ## [Unreleased]
 
+### Added — Flathub in Argon Software
+- Argon Software now has a **Flathub** category. Catalog entries can carry a
+  `flatpak` app-id instead of apt `packages`; those install as **per-user
+  Flatpaks** (no root, sandboxed) with the same one-click Install/Remove and
+  live log. Ships `flatpak` + the desktop portals; a first-boot service
+  (`argon-flathub-setup`, once the network is up) registers the Flathub
+  remote — it installs nothing and does nothing until you pick an app.
+- Seeded the category with Flatseal, Bottles, OBS Studio, Signal and GIMP.
+  apt remains preferred where an app is packaged (smaller, shared libs);
+  Flathub is there for latest releases and un-packaged apps.
+
 ### Added — no-reinstall migration for older installs
 - `scripts/argon-migrate.sh`: brings an Argon system installed *before* the
   updater/snapshots/audio fixes up to the current build without reinstalling
