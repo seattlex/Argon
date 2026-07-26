@@ -112,6 +112,14 @@ blueman
 ## A little flash — fast, pretty system-info in the terminal
 fastfetch
 
+## Pulsemeeter (GUI Voicemeeter alternative) installs per-user via pipx on
+## first launch — these are its runtime prerequisites. pipx does the
+## isolated install; pulseaudio-utils gives it pactl to drive PipeWire's
+## Pulse layer; python3-venv is what pipx builds the environment with.
+pipx
+python3-venv
+pulseaudio-utils
+
 ## Faster & lighter — compressed RAM swap + OOM protection on low-memory boxes
 zram-tools
 earlyoom

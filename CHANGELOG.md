@@ -6,6 +6,16 @@ release tags.
 
 ## [Unreleased]
 
+### Added — Pulsemeeter (graphical Voicemeeter alternative)
+- Ships **Pulsemeeter**, a Voicemeeter-style graphical audio mixer/router
+  for PipeWire, as a menu entry (Sound & Video). It's a PyPI app (not in
+  apt or Flathub), so `argon-pulsemeeter` installs it per-user with pipx on
+  first launch — isolated, no root, `--system-site-packages` so it uses the
+  system GTK — in a visible terminal, then just launches it thereafter.
+  Runtime prerequisites (`pipx`, `python3-venv`, `pulseaudio-utils` for
+  `pactl`) are on the image. The `argon-virtual-audio` CLI stays for a
+  scripted/no-GUI setup; audio-production.md now leads with Pulsemeeter.
+
 ### Added — Flathub in Argon Software
 - Argon Software now has a **Flathub** category. Catalog entries can carry a
   `flatpak` app-id instead of apt `packages`; those install as **per-user
