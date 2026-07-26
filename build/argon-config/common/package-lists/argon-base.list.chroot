@@ -95,3 +95,10 @@ gparted
 snapper
 grub-btrfs
 inotify-tools
+
+## Secure Boot tooling (staging). The default boot chain is unchanged and
+## unsigned (Kali's kernel isn't Microsoft-signed); these are just the tools
+## the opt-in `argon-secureboot-setup` needs to enrol a Machine Owner Key
+## and sign the kernel. Nothing here signs or changes anything by itself.
+mokutil
+sbsigntool

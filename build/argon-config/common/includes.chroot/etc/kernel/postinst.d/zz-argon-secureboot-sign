@@ -1,0 +1,27 @@
+#!/bin/sh
+# Argon OS — sign a freshly-installed kernel with the Machine Owner Key, so
+# it keeps booting under UEFI Secure Boot after a kernel update.
+#
+# This is shipped on every image but is a NO-OP unless the user has opted in
+# by running `argon-secureboot-setup` (which generates the MOK this reads).
+# So it costs nothing on systems that don't use Secure Boot.
+set -e
+
+KEYDIR=/var/lib/argon/secureboot
+[ -f "$KEYDIR/MOK.key" ] && [ -f "$KEYDIR/MOK.crt" ] || exit 0
+command -v sbsign >/dev/null 2>&1 || exit 0
+
+version="$1"
+kernel="/boot/vmlinuz-${version}"
+[ -f "$kernel" ] || exit 0
+
+# Skip if already signed with our key.
+if sbverify --cert "$KEYDIR/MOK.crt" "$kernel" >/dev/null 2>&1; then
+    exit 0
+fi
+
+if sbsign --key "$KEYDIR/MOK.key" --cert "$KEYDIR/MOK.crt" \
+          --output "${kernel}.argon-signed" "$kernel" 2>/dev/null; then
+    mv "${kernel}.argon-signed" "$kernel"
+    echo "argon: signed ${kernel} for Secure Boot"
+fi

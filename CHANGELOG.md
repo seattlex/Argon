@@ -6,6 +6,17 @@ release tags.
 
 ## [Unreleased]
 
+### Added — opt-in UEFI Secure Boot (Machine Owner Key), stage set
+- The default boot chain is **unchanged and unsigned** (so nothing can
+  break), but Argon now ships the tools (`mokutil`, `sbsigntool`) and an
+  opt-in `argon-secureboot-setup` that turns Secure Boot on the standard
+  MOK way: it installs Debian's Microsoft-signed shim + signed GRUB,
+  generates a per-machine key, signs the installed kernel, and enrols the
+  key via mokutil. A shipped kernel `postinst.d` hook re-signs future
+  kernels automatically — and is a **no-op until you opt in** (it does
+  nothing without the MOK). New [secure-boot.md](docs/secure-boot.md) walks
+  through it; the "disable Secure Boot" notes now point at it too.
+
 ### Added — optional Wayland session (experimental)
 - A selectable **"Argon (Wayland)"** session at the login screen, for those
   who want Wayland — a small labwc (wlroots) compositor with the Argon
