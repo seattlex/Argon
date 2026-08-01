@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Network Manager Applet
+Comment=Manage wireless connections and display network status
+Exec=nm-applet
+OnlyShowIn=XFCE;
+NoDisplay=true
+Terminal=false
