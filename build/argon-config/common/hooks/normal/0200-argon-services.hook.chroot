@@ -39,6 +39,42 @@ enable_unit apt-daily-upgrade.timer
 enable_unit chrony.service || enable_unit chronyd.service
 enable_unit systemd-resolved.service
 enable_unit NetworkManager.service
+
+# --- Prove Wi-Fi can actually work --------------------------------------
+# An enabled, running NetworkManager is NOT evidence that Wi-Fi works.
+# NetworkManager does not speak WPA itself: it drives wpa_supplicant over
+# the system bus. With the supplicant missing it starts perfectly happily,
+# reports every Wi-Fi device as "unavailable", and nm-applet says "device
+# not ready" — while the driver, the firmware and wlan0 all look fine and
+# dmesg shows no error at all. That shipped, and cost someone a working
+# laptop with no diagnosable cause.
+#
+# wpasupplicant is only a Recommends of network-manager and Argon builds
+# with --apt-recommends false, so the package list is the only thing
+# holding it in. Assert it here: a green build must mean Wi-Fi associates.
+for bin in wpa_supplicant iw rfkill; do
+    if ! PATH="/usr/sbin:/sbin:$PATH" command -v "$bin" >/dev/null 2>&1; then
+        echo "argon: ERROR '$bin' is missing from the image." >&2
+        echo "argon: Wi-Fi cannot work without wpa_supplicant (NetworkManager" >&2
+        echo "argon: drives it over D-Bus to do the WPA handshake), and iw/" >&2
+        echo "argon: rfkill are how the failure gets diagnosed at all." >&2
+        echo "argon: These are Recommends of network-manager and recommends" >&2
+        echo "argon: are off — list them in package-lists/argon-base.list.chroot." >&2
+        exit 1
+    fi
+done
+
+# NetworkManager reaches the supplicant by D-Bus *activation*: without this
+# service file the binary exists but NM can never start or talk to it, which
+# looks identical to the supplicant being absent.
+WPA_DBUS=/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service
+if [ ! -f "$WPA_DBUS" ]; then
+    echo "argon: ERROR $WPA_DBUS is missing — NetworkManager could not" >&2
+    echo "argon: D-Bus-activate wpa_supplicant, so Wi-Fi would still fail." >&2
+    exit 1
+fi
+
+echo "argon: Wi-Fi stack verified (wpa_supplicant + D-Bus activation, iw, rfkill)"
 # Bluetooth daemon for the desktop's blueman; local radio only, opens no
 # network port, and stays off on hardware without an adapter.
 enable_unit bluetooth.service

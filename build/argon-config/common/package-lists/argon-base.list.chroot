@@ -42,6 +42,28 @@ firmware-iwlwifi
 
 ## Networking
 network-manager
+# wpasupplicant is what actually associates with a Wi-Fi network (the WPA/
+# WPA2/WPA3 handshake). NetworkManager does not do this itself — it drives
+# wpa_supplicant over D-Bus, and with no supplicant present it marks every
+# Wi-Fi device "unavailable" and nm-applet reports "device not ready".
+#
+# It is only a *Recommends* of network-manager, and Argon builds with
+# --apt-recommends false (see build/auto/config), so it was silently absent
+# from every image: the iwlwifi driver loaded, the firmware loaded, wlan0
+# appeared, dmesg was clean — and Wi-Fi was still completely unusable, with
+# nothing anywhere saying why. Never rely on the recommends here.
+# 0200-argon-services asserts these are present at build time.
+wpasupplicant
+# The rest of the wireless userspace, stripped by recommends-off for the same
+# reason. iw and rfkill are how anyone diagnoses a radio problem (both were
+# "command not found" on a real install); wireless-regdb carries the
+# regulatory rules the kernel needs to enable channels at legal power.
+iw
+rfkill
+wireless-regdb
+# NetworkManager's connection sharing / Wi-Fi hotspot mode runs a dnsmasq
+# instance; another recommends-off casualty.
+dnsmasq-base
 wireguard-tools
 openvpn
 
